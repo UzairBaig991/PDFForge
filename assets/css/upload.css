@@ -30,3 +30,5 @@
 .result-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 .upload-retry { margin-top: 12px; }
 .detail-upload { width: min(100%, 590px); margin: 29px auto 0; text-align: left; }
+.tool-option { display: grid; gap: 7px; margin-top: 13px; color: var(--muted); font-size: .82rem; font-weight: 650; }
+.tool-option input, .tool-option select { width: 100%; min-height: 43px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--text); font: inherit; }

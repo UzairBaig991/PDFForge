@@ -9,13 +9,18 @@ final class PdfEngine
 {
     public function executable(string $program): string
     {
+        $engineName = match ($program) {
+            'qpdf' => 'QPDF',
+            'gs' => 'Ghostscript',
+            default => 'PDF processing engine',
+        };
         $setting = trim((string) app_config(match ($program) {
             'qpdf' => 'qpdf_path',
             'gs' => 'ghostscript_path',
             default => 'pdf_engine_path',
         }));
         if ($setting === '') {
-            throw new RuntimeException('PDF processing engine is not configured.');
+            throw new RuntimeException($engineName . ' is not configured.');
         }
 
         $name = match ($program) {
@@ -30,7 +35,7 @@ final class PdfEngine
             $candidate = rtrim($setting, DIRECTORY_SEPARATOR . '/\\') . DIRECTORY_SEPARATOR . $name;
         }
         if (!is_file($candidate) || !is_executable($candidate)) {
-            throw new RuntimeException('PDF processing engine is not configured.');
+            throw new RuntimeException($engineName . ' is not configured.');
         }
         return $candidate;
     }

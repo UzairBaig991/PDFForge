@@ -41,7 +41,7 @@ $baseUrl = app_config('app_url');
         <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-menu" aria-label="Open menu"><span></span><span></span><span></span></button>
         <div class="nav-menu" id="primary-menu">
             <div class="nav-links">
-                <details class="nav-dropdown"><summary>Tools <span aria-hidden="true">⌄</span></summary><div class="nav-popover"><strong>Explore PDF tools</strong><a href="<?= e($baseUrl) ?>/tools/tools.php">All tools</a><a href="<?= e($baseUrl) ?>/tools/pdf-to-jpg.php">PDF to JPG <span class="menu-ready">Ready</span></a><a href="<?= e($baseUrl) ?>/tools/merge-pdf.php">Merge PDF <span>Coming soon</span></a></div></details>
+                <details class="nav-dropdown"><summary>Tools <span aria-hidden="true">⌄</span></summary><div class="nav-popover"><strong>Explore PDF tools</strong><a href="<?= e($baseUrl) ?>/tools/tools.php">All tools</a><a href="<?= e($baseUrl) ?>/tools/pdf-to-jpg.php">PDF to JPG <span class="menu-ready">Ready</span></a><a href="<?= e($baseUrl) ?>/tools/merge-pdf.php">Merge PDF <span class="menu-ready">Ready</span></a></div></details>
                 <a href="<?= e($baseUrl) ?>/index.php#features">Features</a>
                 <a href="<?= e($baseUrl) ?>/pricing.php">Pricing</a>
                 <a href="<?= e($baseUrl) ?>/about.php">About</a>

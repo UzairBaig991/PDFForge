@@ -166,9 +166,10 @@ try {
             );
             $publicMessage = $error->getMessage() === 'ZIP support is not configured.'
                 ? 'ZIP support is not configured on this PHP installation.'
-                : (str_contains($error->getMessage(), 'is not configured')
+                : (($error instanceof \PDFForge\Services\PdfToolException
+                    || preg_match('/^(?:QPDF|Ghostscript|PDF processing engine) is not configured\.$/', $error->getMessage()))
                     ? $error->getMessage()
-                    : $error->getMessage());
+                    : 'PDF processing failed. Confirm the file is supported and the required engine is installed.');
             $failed->execute(['message' => $publicMessage, 'id' => $jobId]);
         } catch (Throwable $databaseError) {
             log_app_error($databaseError, 'job-status');
@@ -186,9 +187,10 @@ try {
     }
     $publicMessage = $error->getMessage() === 'ZIP support is not configured.'
         ? 'ZIP support is not configured on this PHP installation.'
-        : (str_contains($error->getMessage(), 'is not configured')
+        : (($error instanceof \PDFForge\Services\PdfToolException
+            || preg_match('/^(?:QPDF|Ghostscript|PDF processing engine) is not configured\.$/', $error->getMessage()))
             ? $error->getMessage()
-            : 'PDF processing failed. ' . $error->getMessage());
+            : 'PDF processing failed. Confirm the file is supported and the required engine is installed.');
     json_response(['success' => false, 'status' => 'FAILED', 'message' => $publicMessage], 500);
 } finally {
     if (isset($temporaryDirectory) && is_dir($temporaryDirectory)) {

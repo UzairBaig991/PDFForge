@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/app/bootstrap.php';
-render_header('PDFForge', 'Convert and manage PDFs with clear, secure tools. Start with a real PDF to JPG converter.');
+render_header('PDFForge', 'Convert and manage PDFs with secure tools for documents, images, and office formats.');
 ?>
 <main id="main">
     <section class="hero-section">
@@ -30,11 +30,11 @@ render_header('PDFForge', 'Convert and manage PDFs with clear, secure tools. Sta
 
     <section class="section tools-section" id="tools">
         <div class="container">
-            <div class="section-heading"><span class="eyebrow">TOOLS FOR YOUR WORKFLOW</span><h2>Get more done with your PDFs</h2><p>Start with the converter that’s ready today. More tools are clearly marked as they’re built.</p></div>
+            <div class="section-heading"><span class="eyebrow">TOOLS FOR YOUR WORKFLOW</span><h2>Get more done with your PDFs</h2><p>Convert, organize, optimize, and protect your documents with the complete toolkit.</p></div>
             <div class="tool-grid">
                 <a class="tool-card featured-tool" href="tools/pdf-to-jpg.php"><span class="tool-icon icon-purple">▧</span><span class="tool-status status-live">Ready to use</span><h3>PDF to JPG</h3><p>Render PDF pages as individual JPG images or a single ZIP.</p><span class="tool-link">Convert PDF <span aria-hidden="true">→</span></span></a>
-                <a class="tool-card" href="tools/merge-pdf.php"><span class="tool-icon icon-blue">▤</span><span class="tool-status">Coming soon</span><h3>Merge PDF</h3><p>Combine multiple documents into one organized file.</p><span class="tool-link">View tool <span aria-hidden="true">→</span></span></a>
-                <a class="tool-card" href="tools/compress-pdf.php"><span class="tool-icon icon-green">⌁</span><span class="tool-status">Coming soon</span><h3>Compress PDF</h3><p>Reduce document size while keeping useful quality.</p><span class="tool-link">View tool <span aria-hidden="true">→</span></span></a>
+                <a class="tool-card" href="tools/merge-pdf.php"><span class="tool-icon icon-blue">▤</span><span class="tool-status status-live">Ready to use</span><h3>Merge PDF</h3><p>Combine multiple documents into one organized file.</p><span class="tool-link">Use tool <span aria-hidden="true">→</span></span></a>
+                <a class="tool-card" href="tools/compress-pdf.php"><span class="tool-icon icon-green">⌁</span><span class="tool-status status-live">Ready to use</span><h3>Compress PDF</h3><p>Reduce document size with a selectable quality preset.</p><span class="tool-link">Use tool <span aria-hidden="true">→</span></span></a>
                 <a class="tool-card" href="tools/pdf-to-text.php"><span class="tool-icon icon-orange">T</span><span class="tool-status status-live">Ready to use</span><h3>PDF to Text</h3><p>Extract selectable text from a PDF into a UTF-8 text file.</p><span class="tool-link">Extract text <span aria-hidden="true">→</span></span></a>
             </div>
             <div class="center-action"><a class="text-link" href="tools/tools.php">Browse all tools <span aria-hidden="true">→</span></a></div>
@@ -46,7 +46,7 @@ render_header('PDFForge', 'Convert and manage PDFs with clear, secure tools. Sta
             <div class="section-heading"><span class="eyebrow">BUILT WITH CARE</span><h2>Useful tools. Clear expectations.</h2><p>We keep the workflow simple and tell you exactly what happens to your files.</p></div>
             <div class="feature-grid">
                 <article class="feature-item"><span class="feature-icon">⌑</span><h3>Private by design</h3><p>Files are kept in Apache-protected storage and served only through an ownership-checked endpoint.</p></article>
-                <article class="feature-item"><span class="feature-icon">⚡</span><h3>Real processing</h3><p>PDF to JPG uses Poppler to render actual pages—no extensions or renamed files masquerading as conversions.</p></article>
+                <article class="feature-item"><span class="feature-icon">⚡</span><h3>Real processing</h3><p>Every listed tool runs a real conversion or document operation using the configured PDF engines.</p></article>
                 <article class="feature-item"><span class="feature-icon">◷</span><h3>Automatic cleanup</h3><p>Files expire after the configured retention period; schedule the included cleanup task to remove them from disk.</p></article>
                 <article class="feature-item"><span class="feature-icon">▱</span><h3>Works across devices</h3><p>A responsive layout, keyboard-friendly controls, and a real dark theme make the tools comfortable to use.</p></article>
             </div>
@@ -63,7 +63,7 @@ render_header('PDFForge', 'Convert and manage PDFs with clear, secure tools. Sta
     <section class="section faq-section" id="faq">
         <div class="container faq-layout"><div class="section-heading"><span class="eyebrow">GOOD TO KNOW</span><h2>Frequently asked questions</h2><p>Some quick answers about PDFForge and file handling.</p><a class="text-link" href="faq.php">Visit the FAQ <span aria-hidden="true">→</span></a></div>
             <div class="faq-list">
-                <details><summary>What is PDFForge?<span aria-hidden="true">+</span></summary><p>PDFForge is a self-hosted collection of PDF utilities. PDF to JPG is the first implemented tool; other tools are labeled “Coming soon” until their real processing is in place.</p></details>
+                <details><summary>What is PDFForge?<span aria-hidden="true">+</span></summary><p>PDFForge is a self-hosted collection of PDF utilities for conversion, page organization, optimization, and document security.</p></details>
                 <details><summary>How do I convert PDF pages to JPG?<span aria-hidden="true">+</span></summary><p>Select a PDF from the upload area. Once the server’s Poppler engine is configured, PDFForge renders the pages and gives you a JPG or a ZIP of images.</p></details>
                 <details><summary>Are my files kept private?<span aria-hidden="true">+</span></summary><p>Files are stored in protected storage and downloads are authorized against the session or signed-in account that created the job. The local administrator remains responsible for server security.</p></details>
                 <details><summary>How long are uploaded files stored?<span aria-hidden="true">+</span></summary><p>The default retention is one hour. Run the included cleanup script on a schedule so expired files are physically removed.</p></details>
@@ -73,6 +73,6 @@ render_header('PDFForge', 'Convert and manage PDFs with clear, secure tools. Sta
         </div>
     </section>
 
-    <section class="cta-section"><div class="container cta-inner"><div><span class="eyebrow">START WITH A REAL TOOL</span><h2>Ready to work smarter with PDFs?</h2><p>Try the PDF-to-JPG converter or explore the tools in development.</p></div><a class="button button-light" href="tools/pdf-to-jpg.php">Explore PDF tools <span aria-hidden="true">→</span></a></div></section>
+    <section class="cta-section"><div class="container cta-inner"><div><span class="eyebrow">YOUR COMPLETE PDF TOOLKIT</span><h2>Ready to work smarter with PDFs?</h2><p>Convert, organize, and secure your documents with the available tools.</p></div><a class="button button-light" href="tools/pdf-to-jpg.php">Explore PDF tools <span aria-hidden="true">→</span></a></div></section>
 </main>
 <?php render_footer(); ?>

@@ -5,6 +5,8 @@
 
   document.querySelectorAll("[data-upload-form]").forEach((form) => {
     const picker = form.querySelector("[data-file-input]");
+    const isImageUpload = form.dataset.imageUpload === "true";
+    const multipleAllowed = picker.multiple;
     const zone = form.querySelector("[data-drop-zone]");
     const selectButton = form.querySelector("[data-select-file]");
     const fileRow = form.querySelector("[data-upload-file]");
@@ -17,7 +19,7 @@
     const removeButton = form.querySelector("[data-remove-file]");
     const retryButton = form.querySelector("[data-retry]");
     const uploadTitle = form.querySelector("[data-upload-title]");
-    let selectedFile = null;
+    let selectedFiles = [];
     let jobId = "";
     let request = null;
     let processing = false;
@@ -36,7 +38,7 @@
     const reset = () => {
       if (request) request.abort();
       request = null;
-      selectedFile = null;
+      selectedFiles = [];
       jobId = "";
       processing = false;
       picker.value = "";
@@ -47,7 +49,7 @@
       retryButton.hidden = true;
       cancelButton.hidden = true;
       clearResults();
-      uploadTitle.textContent = "Drag & drop your PDF here";
+      uploadTitle.textContent = isImageUpload ? "Drag & drop your images here" : "Drag & drop your PDF here";
     };
 
     const showError = (message, canRetry = false) => {
@@ -57,36 +59,44 @@
       retryButton.hidden = !canRetry;
     };
 
-    const chooseFile = async (file) => {
+    const chooseFiles = async (files) => {
       reset();
-      if (!file) return;
-      if (!file.name.toLowerCase().endsWith(".pdf") || (file.type && file.type !== "application/pdf")) {
-        showError("Choose a PDF file.", false);
-        window.dispatchEvent(new CustomEvent("pdfforge:notice", { detail: { message: "Only PDF files are supported." } }));
+      const chosenFiles = [...(files || [])];
+      if (!chosenFiles.length) return;
+      if ((!multipleAllowed && chosenFiles.length !== 1) || chosenFiles.length > 20) {
+        showError(multipleAllowed ? "Choose no more than 20 files." : "Choose one file.", false);
         return;
       }
-      if (file.size > maxBytes) {
-        showError("This file exceeds the " + Math.round(maxBytes / 1024 / 1024) + " MB upload limit.", false);
+      if (chosenFiles.reduce((sum, file) => sum + file.size, 0) > maxBytes) {
+        showError("The selected files exceed the " + Math.round(maxBytes / 1024 / 1024) + " MB combined upload limit.", false);
         return;
       }
-      if (file.size < 8) {
-        showError("This file is too small to be a valid PDF.", false);
+      if (form.dataset.tool === "merge-pdf" && chosenFiles.length < 2) {
+        showError("Choose at least two PDF files to merge.", false);
         return;
       }
       try {
-        const signature = new TextDecoder().decode(await file.slice(0, 5).arrayBuffer());
-        if (signature !== "%PDF-") {
-          showError("This file does not look like a PDF document.", false);
-          return;
+        for (const file of chosenFiles) {
+          if (file.size < 8) throw new Error("A selected file is too small to be valid.");
+          const bytes = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+          const isPdf = file.name.toLowerCase().endsWith(".pdf")
+            && new TextDecoder().decode(bytes.slice(0, 5)) === "%PDF-";
+          const isJpeg = /\.(?:jpe?g)$/i.test(file.name)
+            && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+          const isPng = /\.png$/i.test(file.name)
+            && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
+          if (isImageUpload ? !(isJpeg || isPng) : !isPdf) {
+            throw new Error(isImageUpload ? "Choose valid JPG or PNG image files." : "Choose valid PDF files.");
+          }
         }
-      } catch {
-        showError("This browser could not validate the selected file.", false);
+      } catch (error) {
+        showError(error.message || "This browser could not validate the selected files.", false);
         return;
       }
-      selectedFile = file;
-      fileName.textContent = file.name;
+      selectedFiles = chosenFiles;
+      fileName.textContent = chosenFiles.map((file) => file.name).join(", ");
       fileRow.hidden = false;
-      uploadTitle.textContent = "Ready to convert";
+      uploadTitle.textContent = "Ready to process";
       clearResults();
       retryButton.hidden = true;
       setStatus("Ready to upload.", false);
@@ -95,10 +105,7 @@
 
     const renderResult = (payload, completedJobId) => {
       statusText.classList.remove("danger-text");
-      const isText = payload.tool === "pdf-to-text";
-      const statusMessage = isText
-        ? "Text extraction complete."
-        : "Conversion complete. " + payload.page_count + (payload.page_count === 1 ? " page rendered." : " pages rendered.");
+      const statusMessage = "Processing complete. Your result is ready to download.";
       setStatus(statusMessage);
       progress.hidden = true;
       retryButton.hidden = true;
@@ -106,7 +113,7 @@
       const download = document.createElement("a");
       download.className = "button button-small";
       download.href = baseUrl + "/api/download.php?id=" + encodeURIComponent(completedJobId);
-      download.textContent = isText ? "Download text" : payload.page_count > 1 ? "Download all pages" : "Download JPG";
+      download.textContent = "Download result";
       resultBox.append(download);
       const remove = document.createElement("button");
       remove.type = "button";
@@ -143,6 +150,9 @@
       retryButton.hidden = true;
       try {
         const body = new URLSearchParams({ id: currentJobId });
+          new FormData(form).forEach((value, key) => {
+            if (typeof value === "string" && !["csrf_token", "tool"].includes(key)) body.set(key, value);
+          });
         const response = await fetch(baseUrl + "/api/process.php", {
           method: "POST",
           headers: { "X-CSRF-Token": csrf, "Content-Type": "application/x-www-form-urlencoded" },
@@ -159,7 +169,7 @@
     };
 
     const startUpload = () => {
-      if (!selectedFile) return;
+      if (!selectedFiles.length) return;
       if (jobId) {
         processJob();
         return;
@@ -206,7 +216,8 @@
         showError("Upload canceled. Your selected PDF is ready to try again.", true);
       }, { once: true });
       const data = new FormData(form);
-      data.set("pdf", selectedFile);
+      data.delete("files[]");
+      selectedFiles.forEach((file) => data.append("files[]", file));
       xhr.send(data);
     };
 
@@ -223,7 +234,7 @@
         picker.click();
       }
     });
-    picker.addEventListener("change", () => chooseFile(picker.files?.[0]));
+    picker.addEventListener("change", () => chooseFiles(picker.files));
     ["dragenter", "dragover"].forEach((eventName) => zone.addEventListener(eventName, (event) => {
       event.preventDefault();
       zone.classList.add("is-dragging");
@@ -232,7 +243,7 @@
       event.preventDefault();
       zone.classList.remove("is-dragging");
     }));
-    zone.addEventListener("drop", (event) => chooseFile(event.dataTransfer?.files?.[0]));
+    zone.addEventListener("drop", (event) => chooseFiles(event.dataTransfer?.files));
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       startUpload();

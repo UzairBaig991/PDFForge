@@ -7,6 +7,10 @@ use RuntimeException;
 use setasign\Fpdi\Fpdi;
 use ZipArchive;
 
+final class PdfToolException extends RuntimeException
+{
+}
+
 final class PdfToolsService
 {
     public function process(string $tool, array $inputs, array $options, string $directory, string $baseName): array
@@ -25,7 +29,7 @@ final class PdfToolsService
             'pdf-to-word' => $this->toWord($inputs[0], $directory, $baseName),
             'pdf-to-excel' => $this->toExcel($inputs[0], $directory, $baseName),
             'pdf-to-ppt' => $this->toPowerPoint($inputs[0], $directory, $baseName),
-            default => throw new RuntimeException('That PDF tool is not available.'),
+            default => throw new PdfToolException('That PDF tool is not available.'),
         };
     }
 
@@ -50,7 +54,7 @@ final class PdfToolsService
         foreach ($inputs as $input) {
             $size = @getimagesize($input);
             if ($size === false || !in_array($size['mime'] ?? '', ['image/jpeg', 'image/png'], true)) {
-                throw new RuntimeException('Choose valid JPG or PNG image files.');
+                throw new PdfToolException('Choose valid JPG or PNG image files.');
             }
             $width = (float) $size[0];
             $height = (float) $size[1];
@@ -64,7 +68,7 @@ final class PdfToolsService
     private function merge(array $inputs, string $directory, string $baseName): array
     {
         if (count($inputs) < 2) {
-            throw new RuntimeException('Select at least two PDF files to merge.');
+            throw new PdfToolException('Select at least two PDF files to merge.');
         }
         $pdf = new Fpdi();
         foreach ($inputs as $input) {
@@ -96,7 +100,7 @@ final class PdfToolsService
     {
         $degrees = (int) ($options['degrees'] ?? 90);
         if (!in_array($degrees, [90, 180, 270], true)) {
-            throw new RuntimeException('Choose a rotation of 90, 180, or 270 degrees.');
+            throw new PdfToolException('Choose a rotation of 90, 180, or 270 degrees.');
         }
         $pageCount = $this->pageCount($input);
         $pages = $this->parsePages((string) ($options['pages'] ?? ''), $pageCount);
@@ -110,7 +114,7 @@ final class PdfToolsService
             $output,
         ], $directory);
         if ($exitCode !== 0 || !is_file($output)) {
-            throw new RuntimeException('PDF rotation failed. Check that qpdf is installed and the PDF is valid.');
+            throw new PdfToolException('PDF rotation failed. Check that qpdf is installed and the PDF is valid.');
         }
         return $this->moveResult($output, $directory, $baseName . '-rotated.pdf');
     }
@@ -119,7 +123,7 @@ final class PdfToolsService
     {
         $text = trim((string) ($options['text'] ?? ''));
         if ($text === '' || mb_strlen($text) > 100) {
-            throw new RuntimeException('Enter watermark text of 1 to 100 characters.');
+            throw new PdfToolException('Enter watermark text of 1 to 100 characters.');
         }
         $pdf = new Fpdi();
         $count = $pdf->setSourceFile($input);
@@ -139,7 +143,7 @@ final class PdfToolsService
     {
         $preset = (string) ($options['quality'] ?? 'ebook');
         if (!in_array($preset, ['screen', 'ebook', 'printer'], true)) {
-            throw new RuntimeException('Choose a valid compression quality.');
+            throw new PdfToolException('Choose a valid compression quality.');
         }
         $output = $directory . DIRECTORY_SEPARATOR . 'compressed.pdf';
         $engine = new PdfEngine();
@@ -155,7 +159,7 @@ final class PdfToolsService
             $input,
         ], $directory);
         if ($exitCode !== 0 || !is_file($output)) {
-            throw new RuntimeException('PDF compression failed. Check that Ghostscript is installed and the PDF is valid.');
+            throw new PdfToolException('PDF compression failed. Check that Ghostscript is installed and the PDF is valid.');
         }
         return $this->moveResult($output, $directory, $baseName . '-compressed.pdf');
     }
@@ -164,7 +168,7 @@ final class PdfToolsService
     {
         $password = (string) ($options['password'] ?? '');
         if (strlen($password) < 6 || strlen($password) > 128) {
-            throw new RuntimeException('Choose a password between 6 and 128 characters.');
+            throw new PdfToolException('Choose a password between 6 and 128 characters.');
         }
         $output = $directory . DIRECTORY_SEPARATOR . 'protected.pdf';
         $engine = new PdfEngine();
@@ -173,7 +177,7 @@ final class PdfToolsService
             $engine->executable('qpdf'), '--encrypt', $password, $ownerPassword, '256', '--', $input, $output,
         ], $directory);
         if ($exitCode !== 0 || !is_file($output)) {
-            throw new RuntimeException('PDF protection failed. Check that qpdf is installed and the PDF is valid.');
+            throw new PdfToolException('PDF protection failed. Check that qpdf is installed and the PDF is valid.');
         }
         return $this->moveResult($output, $directory, $baseName . '-protected.pdf');
     }
@@ -182,7 +186,7 @@ final class PdfToolsService
     {
         $password = (string) ($options['password'] ?? '');
         if ($password === '' || strlen($password) > 128) {
-            throw new RuntimeException('Enter the PDF password to unlock this document.');
+            throw new PdfToolException('Enter the PDF password to unlock this document.');
         }
         $output = $directory . DIRECTORY_SEPARATOR . 'unlocked.pdf';
         $engine = new PdfEngine();
@@ -190,7 +194,7 @@ final class PdfToolsService
             $engine->executable('qpdf'), '--password=' . $password, '--decrypt', $input, $output,
         ], $directory);
         if ($exitCode !== 0 || !is_file($output)) {
-            throw new RuntimeException('Could not unlock the PDF. Check the password and your permission to modify this document.');
+            throw new PdfToolException('Could not unlock the PDF. Check the password and your permission to modify this document.');
         }
         return $this->moveResult($output, $directory, $baseName . '-unlocked.pdf');
     }
@@ -283,7 +287,7 @@ final class PdfToolsService
         $path = (new PdfTextService())->extract($input, $directory);
         $text = file_get_contents($path);
         if ($text === false) {
-            throw new RuntimeException('The PDF text could not be read.');
+            throw new PdfToolException('The PDF text could not be read.');
         }
         return $text;
     }
@@ -305,7 +309,7 @@ final class PdfToolsService
             return range(1, $count);
         }
         if (strlen($value) > 500 || !preg_match('/^\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*$/', $value)) {
-            throw new RuntimeException('Enter page numbers or ranges such as 1-3,5.');
+            throw new PdfToolException('Enter page numbers or ranges such as 1-3,5.');
         }
         $pages = [];
         foreach (explode(',', $value) as $part) {
@@ -313,7 +317,7 @@ final class PdfToolsService
             $start = $bounds[0];
             $end = $bounds[1] ?? $start;
             if ($start < 1 || $end < $start || $end > $count) {
-                throw new RuntimeException('A selected page is outside this PDF.');
+                throw new PdfToolException('A selected page is outside this PDF.');
             }
             for ($page = $start; $page <= $end; $page++) {
                 $pages[$page] = $page;
@@ -356,7 +360,7 @@ final class PdfToolsService
     {
         $path = $directory . DIRECTORY_SEPARATOR . 'result-' . bin2hex(random_bytes(4)) . '.' . pathinfo($name, PATHINFO_EXTENSION);
         if (!rename($source, $path)) {
-            throw new RuntimeException('The converted file could not be saved.');
+            throw new PdfToolException('The converted file could not be saved.');
         }
         return ['path' => $path, 'name' => $name] + $metadata;
     }
@@ -364,17 +368,17 @@ final class PdfToolsService
     private function zipResult(array $files, string $directory, string $name, string $prefix, string $extension = 'jpg'): array
     {
         if (!class_exists(ZipArchive::class)) {
-            throw new RuntimeException('ZIP support is not configured.');
+            throw new PdfToolException('ZIP support is not configured.');
         }
         $path = $directory . DIRECTORY_SEPARATOR . 'result-' . bin2hex(random_bytes(4)) . '.zip';
         $archive = new ZipArchive();
         if ($archive->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new RuntimeException('The converted files could not be packaged for download.');
+            throw new PdfToolException('The converted files could not be packaged for download.');
         }
         foreach (array_values($files) as $index => $file) {
             if (!$archive->addFile($file, $prefix . ($index + 1) . '.' . $extension)) {
                 $archive->close();
-                throw new RuntimeException('A converted file could not be added to the download.');
+                throw new PdfToolException('A converted file could not be added to the download.');
             }
         }
         $archive->close();
@@ -386,12 +390,12 @@ final class PdfToolsService
     {
         $archive = new ZipArchive();
         if ($archive->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new RuntimeException('The office document could not be packaged.');
+            throw new PdfToolException('The office document could not be packaged.');
         }
         foreach ($files as $name => $contents) {
             if (!$archive->addFromString($name, $contents)) {
                 $archive->close();
-                throw new RuntimeException('The office document could not be packaged.');
+                throw new PdfToolException('The office document could not be packaged.');
             }
         }
         $archive->close();
