@@ -3,12 +3,13 @@ $multiUpload = in_array($uploadTool ?? '', ['jpg-to-pdf', 'merge-pdf'], true);
 $imageUpload = ($uploadTool ?? '') === 'jpg-to-pdf';
 $acceptedTypes = $imageUpload ? 'image/jpeg,image/png,.jpg,.jpeg,.png' : 'application/pdf,.pdf';
 $uploadTitleText = $imageUpload ? 'Drag & drop your images here' : 'Drag & drop your PDF here';
+$selectionLabel = $imageUpload ? 'image files' : ($multiUpload ? 'PDF files' : 'a PDF file');
 ?>
 <form class="upload-form" data-upload-form data-tool="<?= e($uploadTool ?? 'pdf-to-jpg') ?>" data-image-upload="<?= $imageUpload ? 'true' : 'false' ?>" action="<?= e(app_config('app_url')) ?>/api/upload.php" method="post" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
     <input type="hidden" name="tool" value="<?= e($uploadTool ?? 'pdf-to-jpg') ?>">
-    <input class="file-input" type="file" name="files[]" accept="<?= e($acceptedTypes) ?>" <?= $multiUpload ? 'multiple' : '' ?> data-file-input aria-label="Choose <?= $imageUpload ? 'image files' : 'a PDF file' ?>">
-    <div class="drop-zone" data-drop-zone tabindex="0" role="button" aria-label="Choose or drop a PDF file">
+    <input class="file-input" type="file" name="files[]" accept="<?= e($acceptedTypes) ?>" <?= $multiUpload ? 'multiple' : '' ?> data-file-input aria-label="Choose <?= e($selectionLabel) ?>">
+    <div class="drop-zone" data-drop-zone tabindex="0" role="button" aria-label="Choose or drop <?= e($selectionLabel) ?>">
         <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M12 5h16l9 9v29H12z"/><path d="M28 5v10h9M17 25h15M17 31h15M17 37h10"/></svg></span>
         <strong data-upload-title><?= e($uploadTitleText) ?></strong>
         <span class="upload-or">or</span>

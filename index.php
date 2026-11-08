@@ -13,17 +13,22 @@ render_header('PDFForge', 'Convert and manage PDFs with secure tools for documen
                 <div class="hero-actions">
                     <a class="button" href="tools/tools.php">Explore PDF tools <span aria-hidden="true">→</span></a>
                     <a class="button button-outline" href="tools/pdf-to-jpg.php">Try PDF to JPG</a>
+                    <a class="button button-outline" href="tools/pdf-to-word.php">Try PDF to Word</a>
                 </div>
                 <div class="trust-row"><span><span aria-hidden="true">✓</span> Private file handling</span><span><span aria-hidden="true">✓</span> Configurable retention</span></div>
             </div>
             <div class="hero-visual">
                 <div class="decor decor-one"></div><div class="decor decor-two"></div>
                 <section class="upload-card" aria-labelledby="upload-title">
-                    <div class="upload-card-heading"><span class="upload-symbol" aria-hidden="true">↑</span><div><h2 id="upload-title">PDF to JPG</h2><p>Turn every page into a clear image</p></div></div>
+                    <div class="upload-card-heading"><span class="upload-symbol" aria-hidden="true">↑</span><div><h2 id="upload-title">PDF to JPG</h2><p data-home-tool-description>Turn every page into a clear image</p></div></div>
+                    <div class="home-tool-switch" role="tablist" aria-label="Choose a PDF tool">
+                        <button class="home-tool-tab is-active" type="button" role="tab" aria-selected="true" data-home-tool="pdf-to-jpg">PDF to JPG</button>
+                        <button class="home-tool-tab" type="button" role="tab" aria-selected="false" data-home-tool="pdf-to-word">PDF to Word</button>
+                    </div>
                     <?php require __DIR__ . '/includes/upload-form.php'; ?>
                     <p class="privacy-note"><span aria-hidden="true">◇</span> Your file is private and removed automatically.</p>
                 </section>
-                <div class="floating-note"><span class="mini-check" aria-hidden="true">✓</span><span><strong>One page at a time</strong><small>or a ZIP of every page</small></span></div>
+                <div class="floating-note"><span class="mini-check" aria-hidden="true">✓</span><span><strong data-home-note-title>One page at a time</strong><small data-home-note-description>or a ZIP of every page</small></span></div>
             </div>
         </div>
     </section>
@@ -33,6 +38,7 @@ render_header('PDFForge', 'Convert and manage PDFs with secure tools for documen
             <div class="section-heading"><span class="eyebrow">TOOLS FOR YOUR WORKFLOW</span><h2>Get more done with your PDFs</h2><p>Convert, organize, optimize, and protect your documents with the complete toolkit.</p></div>
             <div class="tool-grid">
                 <a class="tool-card featured-tool" href="tools/pdf-to-jpg.php"><span class="tool-icon icon-purple">▧</span><span class="tool-status status-live">Ready to use</span><h3>PDF to JPG</h3><p>Render PDF pages as individual JPG images or a single ZIP.</p><span class="tool-link">Convert PDF <span aria-hidden="true">→</span></span></a>
+                <a class="tool-card featured-tool" href="tools/pdf-to-word.php"><span class="tool-icon icon-blue">W</span><span class="tool-status status-live">Ready to use</span><h3>PDF to Word</h3><p>Extract selectable PDF text into an editable Word document.</p><span class="tool-link">Convert PDF <span aria-hidden="true">→</span></span></a>
                 <a class="tool-card" href="tools/merge-pdf.php"><span class="tool-icon icon-blue">▤</span><span class="tool-status status-live">Ready to use</span><h3>Merge PDF</h3><p>Combine multiple documents into one organized file.</p><span class="tool-link">Use tool <span aria-hidden="true">→</span></span></a>
                 <a class="tool-card" href="tools/compress-pdf.php"><span class="tool-icon icon-green">⌁</span><span class="tool-status status-live">Ready to use</span><h3>Compress PDF</h3><p>Reduce document size with a selectable quality preset.</p><span class="tool-link">Use tool <span aria-hidden="true">→</span></span></a>
                 <a class="tool-card" href="tools/pdf-to-text.php"><span class="tool-icon icon-orange">T</span><span class="tool-status status-live">Ready to use</span><h3>PDF to Text</h3><p>Extract selectable text from a PDF into a UTF-8 text file.</p><span class="tool-link">Extract text <span aria-hidden="true">→</span></span></a>
@@ -56,7 +62,7 @@ render_header('PDFForge', 'Convert and manage PDFs with secure tools for documen
     <section class="section steps-section">
         <div class="container">
             <div class="section-heading"><span class="eyebrow">THREE SIMPLE STEPS</span><h2>From file to finished</h2></div>
-            <div class="steps-grid"><article><span>01</span><h3>Upload</h3><p>Choose your PDF. We check its type and size before saving it.</p></article><article><span>02</span><h3>Process</h3><p>The configured PDF engine renders each page to an image.</p></article><article><span>03</span><h3>Download</h3><p>Get a JPG for one page or a ZIP containing all pages.</p></article></div>
+            <div class="steps-grid"><article><span>01</span><h3>Upload</h3><p>Choose a PDF or image file. We validate its type and size before saving.</p></article><article><span>02</span><h3>Process</h3><p>The configured engine runs your selected conversion or document operation.</p></article><article><span>03</span><h3>Download</h3><p>Download your converted document or processed PDF.</p></article></div>
         </div>
     </section>
 

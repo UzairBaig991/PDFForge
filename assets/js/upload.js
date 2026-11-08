@@ -5,6 +5,10 @@
 
   document.querySelectorAll("[data-upload-form]").forEach((form) => {
     const picker = form.querySelector("[data-file-input]");
+    const homeToolTabs = [...document.querySelectorAll("[data-home-tool]")];
+    const homeToolDescription = document.querySelector("[data-home-tool-description]");
+    const homeNoteTitle = document.querySelector("[data-home-note-title]");
+    const homeNoteDescription = document.querySelector("[data-home-note-description]");
     const isImageUpload = form.dataset.imageUpload === "true";
     const multipleAllowed = picker.multiple;
     const zone = form.querySelector("[data-drop-zone]");
@@ -23,6 +27,29 @@
     let jobId = "";
     let request = null;
     let processing = false;
+
+    homeToolTabs.forEach((tab) => tab.addEventListener("click", () => {
+      if (jobId || selectedFiles.length || request || processing) return;
+      const tool = tab.dataset.homeTool;
+      const isWord = tool === "pdf-to-word";
+      form.dataset.tool = tool;
+      form.querySelector('input[name="tool"]').value = tool;
+      homeToolTabs.forEach((option) => {
+        const active = option === tab;
+        option.classList.toggle("is-active", active);
+        option.setAttribute("aria-selected", String(active));
+      });
+      document.querySelector("#upload-title").textContent = isWord ? "PDF to Word" : "PDF to JPG";
+      homeToolDescription.textContent = isWord
+        ? "Turn selectable text into an editable Word document"
+        : "Turn every page into a clear image";
+      homeNoteTitle.textContent = isWord ? "One file at a time" : "One page at a time";
+      homeNoteDescription.textContent = isWord ? "editable Word document" : "or a ZIP of every page";
+      form.querySelector("[data-select-file]").textContent = "Select PDF file";
+      form.querySelector(".upload-limit").textContent = isWord
+        ? "PDF · one file at a time · up to " + Math.round(maxBytes / 1024 / 1024) + " MB"
+        : "PDF · combined size up to " + (maxBytes / 1024 / 1024).toFixed(1) + " MB";
+    }));
 
     const setStatus = (message, isError = false) => {
       statusBox.hidden = false;
@@ -113,7 +140,7 @@
       const download = document.createElement("a");
       download.className = "button button-small";
       download.href = baseUrl + "/api/download.php?id=" + encodeURIComponent(completedJobId);
-      download.textContent = "Download result";
+      download.textContent = payload.tool === "pdf-to-word" ? "Download Word document" : "Download JPG";
       resultBox.append(download);
       const remove = document.createElement("button");
       remove.type = "button";
@@ -145,14 +172,14 @@
       if (!jobId || processing) return;
       const currentJobId = jobId;
       processing = true;
-      setStatus("Processing PDF pages. This may take a moment…");
+      setStatus("Processing your files. This may take a moment…");
       progress.hidden = true;
       retryButton.hidden = true;
       try {
         const body = new URLSearchParams({ id: currentJobId });
-          new FormData(form).forEach((value, key) => {
-            if (typeof value === "string" && !["csrf_token", "tool"].includes(key)) body.set(key, value);
-          });
+        new FormData(form).forEach((value, key) => {
+          if (typeof value === "string" && !["csrf_token", "tool"].includes(key)) body.set(key, value);
+        });
         const response = await fetch(baseUrl + "/api/process.php", {
           method: "POST",
           headers: { "X-CSRF-Token": csrf, "Content-Type": "application/x-www-form-urlencoded" },

@@ -34,7 +34,12 @@ $extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
 $mime = match ($extension) {
     'zip' => 'application/zip',
     'txt' => 'text/plain; charset=UTF-8',
-    default => 'image/jpeg',
+    'jpg', 'jpeg' => 'image/jpeg',
+    'pdf' => 'application/pdf',
+    'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    default => 'application/octet-stream',
 };
 header('Content-Type: ' . $mime);
 header('Content-Disposition: attachment; filename="' . $name . '"; filename*=UTF-8\'\'' . rawurlencode((string) $file['result_name']));

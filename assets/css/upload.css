@@ -2,6 +2,9 @@
 .upload-card-heading { display: flex; align-items: center; gap: 13px; margin-bottom: 20px; }
 .upload-card-heading h2 { margin: 0 0 3px; font-size: 1.13rem; }
 .upload-card-heading p { margin: 0; color: var(--muted); font-size: .82rem; }
+.home-tool-switch { display: flex; gap: 7px; margin: -4px 0 16px; }
+.home-tool-tab { min-height: 36px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--muted); font: inherit; font-size: .79rem; font-weight: 650; cursor: pointer; }
+.home-tool-tab.is-active { border-color: var(--primary); background: #f0edff; color: var(--primary); }
 .upload-symbol { display: grid; width: 43px; height: 43px; place-items: center; border-radius: 13px; background: #f0edff; color: var(--primary); font-size: 1.5rem; font-weight: 700; }
 .upload-form { position: relative; }
 .file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }

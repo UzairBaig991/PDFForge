@@ -1,24 +1,23 @@
 # PDFForge
 
-PDFForge is a self-hosted PHP PDF-tools starter for Apache, MySQL, and XAMPP. The implemented conversion is **PDF to JPG**, rendered by Poppler's `pdftoppm`. A one-page PDF produces a JPG download; multi-page PDFs produce a ZIP containing each page as a JPG. Tools marked **Coming soon** do not claim to process files.
+PDFForge is a self-hosted PHP toolkit for Apache, MySQL, and XAMPP. All 13 listed PDF tools have processing workflows: image and office-format conversions, merge/split/rotate/watermark, compression, and password protection/unlocking.
 
 ## Features
 
 - Responsive homepage, tool directory/search, FAQ, and persistent light/dark theme.
-- Server-validated PDF upload (extension, detected MIME type, PDF signature, and size).
+- Server-validated PDF/image uploads (extension, detected MIME type, file signature, and combined size).
 - Random internal upload names, protected local storage, CSRF checks, session/account ownership, and authorized downloads.
-- Real Poppler PDF rendering, PDF-to-text extraction, ZIP packaging for multi-page PDFs, and actual upload progress.
+- Poppler rendering/text extraction, FPDI page editing, QPDF password and rotation operations, Ghostscript compression, and ZIP packaging for multi-page outputs.
+- DOCX, XLSX, and PPTX creation from selectable PDF text. These conversions do not OCR scans or preserve the original page layout.
 - PDO/MySQL schema, account registration/login/profile/password change, a basic dashboard, and admin-role-gated overview.
 - Configurable one-hour default retention with a command-line cleanup script.
-
-No PDF conversion Composer library is bundled; PDF-to-JPG and PDF-to-Text need a separately installed Poppler package (`pdftoppm.exe` and `pdftotext.exe`). PDF-to-Word, OCR, billing, email verification, password reset email delivery, and the other tools are not implemented.
 
 ## Requirements
 
 - Windows 10/11 with XAMPP (Apache, MySQL, PHP 8.0+).
 - PHP extensions: PDO MySQL, Fileinfo, mbstring, and ZipArchive.
 - Composer 2.
-- Poppler for Windows, including `pdftoppm.exe`.
+- Poppler for Windows (`pdftoppm.exe`, `pdftotext.exe`), QPDF (`qpdf.exe`), and Ghostscript (`gswin64c.exe`).
 
 ## XAMPP setup
 
@@ -34,25 +33,33 @@ No PDF conversion Composer library is bundled; PDF-to-JPG and PDF-to-Text need a
    composer install
    ```
 
-   There are no third-party PHP packages to download. Composer checks the required PHP version/extensions and creates the autoloader.
+   Composer installs FPDI and FPDF, which power PDF assembly and page editing.
+
+   Run the local PDF-editing smoke test after installing dependencies and enabling ZIP support:
+
+   ```powershell
+   php -d extension=zip tests\pdf-tools-smoke.php
+   ```
 7. Configure PHP upload sizes in `C:\xampp\php\php.ini`. Set `upload_max_filesize` to at least `50M`, `post_max_size` to at least `55M`, and `max_execution_time` to an appropriate value for the PDFs you process. Save the file and restart Apache.
-8. Configure Poppler as described below, then open `http://localhost/PDFForge/`.
+8. Configure Poppler, QPDF, and Ghostscript as described below, then open `http://localhost/PDFForge/`.
 
-## Configure Poppler on Windows
+## Configure PDF engines on Windows
 
-1. Install/extract a trusted 64-bit Poppler for Windows distribution. Confirm the extracted package contains `pdftoppm.exe` (commonly under `Library\bin`).
-2. Set `PDF_ENGINE_PATH` in `.env` to the **directory containing** `pdftoppm.exe` and `pdftotext.exe`, for example:
+Install trusted 64-bit Windows builds of Poppler, QPDF, and Ghostscript. Set the following `.env` values to the executable itself or its containing folder:
 
    ```dotenv
    PDF_ENGINE_PATH=C:\tools\poppler\Library\bin
+   QPDF_PATH=C:\tools\qpdf\bin
+   GHOSTSCRIPT_PATH=C:\Program Files\gs\gs10.05.1\bin
    ```
 
-   A direct path to `pdftoppm.exe` is also accepted; the sibling `pdftotext.exe` is used for text extraction. Do not copy a personal machine path into source code.
-3. Ensure the Windows account running Apache can read/execute the Poppler binaries and write to `storage\uploads`, `storage\processed`, `storage\temp`, and `storage\logs`.
-4. Restart Apache. The application checks that the configured executable exists before conversion and reports **“PDF processing engine is not configured.”** if it is missing or not executable.
-5. Test using a small, unencrypted PDF at `http://localhost/PDFForge/tools/pdf-to-jpg.php` or `pdf-to-text.php`. The server also needs PHP's `proc_open` function enabled. PDF-to-Text extracts selectable text only; scanned pages require OCR, which is not included.
+The directories must contain `pdftoppm.exe` and `pdftotext.exe`, `qpdf.exe`, and `gswin64c.exe`, respectively. Direct paths to the relevant executables are also accepted. Do not copy a personal machine path into source code.
 
-Poppler renders page images at `PDF_DPI` (default 150; configurable from 72 to 300). The tool reports errors instead of returning files when rendering fails.
+Ensure the Windows account running Apache can execute the configured binaries and write to `storage\uploads`, `storage\processed`, `storage\temp`, and `storage\logs`. Enable PHP's `proc_open` and ZIP support, then restart Apache. Poppler renders page images at `PDF_DPI` (default 150; configurable from 72 to 300).
+
+PDF-to-Word and PDF-to-Excel extract selectable text; Excel detects columns using spacing in Poppler's layout output. PDF-to-PowerPoint creates one editable text slide per PDF page. These are text conversions, not OCR or pixel-perfect layout conversions. Scanned PDFs require an OCR engine, which is not included.
+
+The split tool packages individual pages into a ZIP when no page range is entered. Enter a range such as `1-3,5` to extract those pages into one PDF. Merge accepts up to 20 PDFs; JPG-to-PDF accepts up to 20 JPG/PNG images.
 
 ## Configuration
 
@@ -68,6 +75,8 @@ Available `.env` settings:
 | `MAX_UPLOAD_SIZE` | Maximum PDF bytes | `52428800` (50 MiB) |
 | `FILE_RETENTION_SECONDS` | Upload/result expiry | `3600` |
 | `PDF_ENGINE_PATH` | Poppler executable or its containing folder | Unset |
+| `QPDF_PATH` | QPDF executable or its containing folder | Unset |
+| `GHOSTSCRIPT_PATH` | Ghostscript executable or its containing folder | Unset |
 | `PDF_DPI` | Render resolution | `150` |
 
 Keep `.env` private. Apache access to `app`, `config`, `database`, `includes`, `storage`, and `vendor` is denied by `.htaccess`; keep Apache `AllowOverride` enabled so these protections take effect.
@@ -96,7 +105,7 @@ For ongoing use, create a Windows Task Scheduler task that runs this command at 
 
 - **Database connection error:** start MySQL, verify `.env`, import the schema, and ensure `pdo_mysql` is enabled.
 - **Upload rejected by PHP:** check `upload_max_filesize`, `post_max_size`, and the application `MAX_UPLOAD_SIZE`; restart Apache after `php.ini` edits.
-- **PDF engine not configured:** verify the `.env` path points to `pdftoppm.exe` or its directory and that Apache can execute it.
+- **Engine not configured:** verify the `.env` path points to the required Poppler, QPDF, or Ghostscript executable or its directory and that Apache can execute it.
 - **Conversion fails:** use a valid PDF and ensure the PHP `proc_open` function is not disabled. Encrypted or malformed PDFs may not render.
 - **Access denied to storage:** ensure the Apache account has write permission to the four `storage` subdirectories.
 - **Links point to the wrong folder:** set `APP_URL` to the exact local app URL in `.env`, then restart Apache.

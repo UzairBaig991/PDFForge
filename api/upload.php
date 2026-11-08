@@ -83,6 +83,15 @@ foreach ($uploads['name'] as $index => $originalName) {
 $temporaryDirectory = null;
 $storedPath = null;
 try {
+    $pdo = db();
+    $rateLimit = $pdo->prepare(
+        'SELECT COUNT(*) FROM files WHERE session_hash = :session_hash AND created_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR)'
+    );
+    $rateLimit->execute(['session_hash' => session_owner_hash()]);
+    if ((int) $rateLimit->fetchColumn() >= 20) {
+        json_response(['success' => false, 'message' => 'Upload limit reached. Please try again later.'], 429);
+    }
+
     ensure_storage_directories();
     $temporaryDirectory = APP_ROOT . '/storage/temp/upload-' . bin2hex(random_bytes(16));
     if (!mkdir($temporaryDirectory, 0700, true)) {
@@ -125,14 +134,6 @@ try {
     $user = current_user();
     $fileId = bin2hex(random_bytes(16));
     $jobId = bin2hex(random_bytes(16));
-    $pdo = db();
-    $rateLimit = $pdo->prepare(
-        'SELECT COUNT(*) FROM files WHERE session_hash = :session_hash AND created_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR)'
-    );
-    $rateLimit->execute(['session_hash' => session_owner_hash()]);
-    if ((int) $rateLimit->fetchColumn() >= 20) {
-        json_response(['success' => false, 'message' => 'Upload limit reached. Please try again later.'], 429);
-    }
     $pdo->beginTransaction();
     $insertFile = $pdo->prepare(
         'INSERT INTO files (id, user_id, session_hash, original_name, stored_path, mime_type, size_bytes, expires_at)

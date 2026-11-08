@@ -79,7 +79,7 @@ final class PdfToolsService
 
     private function split(string $input, array $options, string $directory, string $baseName): array
     {
-        $ranges = $this->requestedRanges((string) ($options['pages'] ?? ''), $input);
+        $ranges = $this->requestedRanges($this->optionString($options, 'pages'), $input);
         $parts = [];
         foreach ($ranges as $index => $range) {
             $pdf = new Fpdi();
@@ -98,12 +98,12 @@ final class PdfToolsService
 
     private function rotate(string $input, array $options, string $directory, string $baseName): array
     {
-        $degrees = (int) ($options['degrees'] ?? 90);
+        $degrees = (int) $this->optionString($options, 'degrees', '90');
         if (!in_array($degrees, [90, 180, 270], true)) {
             throw new PdfToolException('Choose a rotation of 90, 180, or 270 degrees.');
         }
         $pageCount = $this->pageCount($input);
-        $pages = $this->parsePages((string) ($options['pages'] ?? ''), $pageCount);
+        $pages = $this->parsePages($this->optionString($options, 'pages'), $pageCount);
         $output = $directory . DIRECTORY_SEPARATOR . 'rotated.pdf';
         $engine = new PdfEngine();
         $exitCode = $engine->run([
@@ -121,8 +121,8 @@ final class PdfToolsService
 
     private function watermark(string $input, array $options, string $directory, string $baseName): array
     {
-        $text = trim((string) ($options['text'] ?? ''));
-        if ($text === '' || mb_strlen($text) > 100) {
+        $text = trim($this->optionString($options, 'text'));
+        if ($text === '' || mb_strlen($text) > 100 || preg_match('/[\x00-\x1F\x7F]/', $text)) {
             throw new PdfToolException('Enter watermark text of 1 to 100 characters.');
         }
         $pdf = new Fpdi();
@@ -141,7 +141,7 @@ final class PdfToolsService
 
     private function compress(string $input, array $options, string $directory, string $baseName): array
     {
-        $preset = (string) ($options['quality'] ?? 'ebook');
+        $preset = $this->optionString($options, 'quality', 'ebook');
         if (!in_array($preset, ['screen', 'ebook', 'printer'], true)) {
             throw new PdfToolException('Choose a valid compression quality.');
         }
@@ -166,8 +166,8 @@ final class PdfToolsService
 
     private function protect(string $input, array $options, string $directory, string $baseName): array
     {
-        $password = (string) ($options['password'] ?? '');
-        if (strlen($password) < 6 || strlen($password) > 128) {
+        $password = $this->optionString($options, 'password');
+        if (strlen($password) < 6 || strlen($password) > 128 || preg_match('/[\x00-\x1F\x7F]/', $password)) {
             throw new PdfToolException('Choose a password between 6 and 128 characters.');
         }
         $output = $directory . DIRECTORY_SEPARATOR . 'protected.pdf';
@@ -184,8 +184,8 @@ final class PdfToolsService
 
     private function unlock(string $input, array $options, string $directory, string $baseName): array
     {
-        $password = (string) ($options['password'] ?? '');
-        if ($password === '' || strlen($password) > 128) {
+        $password = $this->optionString($options, 'password');
+        if ($password === '' || strlen($password) > 128 || preg_match('/[\x00-\x1F\x7F]/', $password)) {
             throw new PdfToolException('Enter the PDF password to unlock this document.');
         }
         $output = $directory . DIRECTORY_SEPARATOR . 'unlocked.pdf';
@@ -256,7 +256,9 @@ final class PdfToolsService
     {
         $text = $this->text($input, $directory);
         $pages = preg_split('/\f/u', $text) ?: [$text];
-        $pages = array_values(array_filter($pages, static fn (string $page): bool => trim($page) !== ''));
+        while (count($pages) > 1 && trim((string) end($pages)) === '') {
+            array_pop($pages);
+        }
         if (!$pages) {
             $pages = ['No selectable text was found on this PDF page.'];
         }
@@ -288,6 +290,9 @@ final class PdfToolsService
         $text = file_get_contents($path);
         if ($text === false) {
             throw new PdfToolException('The PDF text could not be read.');
+        }
+        if (trim($text) === '') {
+            throw new PdfToolException('No selectable text was found. Scanned PDFs require OCR.');
         }
         return $text;
     }
@@ -340,7 +345,7 @@ final class PdfToolsService
         }
     }
 
-    private function appendPage(Fpdi $pdf, string $input, int $page, int $rotation = 0): void
+    private function appendPage(Fpdi $pdf, string $input, int $page): void
     {
         $pdf->setSourceFile($input);
         $template = $pdf->importPage($page);
@@ -408,7 +413,20 @@ final class PdfToolsService
 
     private function xml(string $value): string
     {
+        if (!mb_check_encoding($value, 'UTF-8')) {
+            throw new PdfToolException('The PDF text is not valid UTF-8.');
+        }
+        $value = preg_replace('/[^\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]/u', '', $value) ?? '';
         return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+    }
+
+    private function optionString(array $options, string $key, string $default = ''): string
+    {
+        $value = $options[$key] ?? $default;
+        if (!is_string($value)) {
+            throw new PdfToolException('Invalid tool options.');
+        }
+        return $value;
     }
 
     private function columnName(int $number): string
@@ -462,10 +480,13 @@ final class PdfToolsService
     private function slideXml(string $text, int $slide): string
     {
         $paragraphs = '';
-        foreach (array_slice(preg_split('/\R/u', trim($text)) ?: [], 0, 45) as $line) {
+        foreach (preg_split('/\R/u', trim($text)) ?: [] as $line) {
             if (trim($line) !== '') {
                 $paragraphs .= '<a:p><a:r><a:rPr lang="en-US" sz="1800"/><a:t>' . $this->xml(trim($line)) . '</a:t></a:r><a:endParaRPr lang="en-US"/></a:p>';
             }
+        }
+        if ($paragraphs === '') {
+            $paragraphs = '<a:p><a:r><a:rPr lang="en-US" sz="1800"/><a:t>No selectable text found on this page.</a:t></a:r></a:p>';
         }
         return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr><p:sp><p:nvSpPr><p:cNvPr id="2" name="Slide ' . $slide . ' text"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="457200" y="457200"/><a:ext cx="8229600" cy="4236720"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr><p:txBody><a:bodyPr wrap="square"/><a:lstStyle/>' . $paragraphs . '</p:txBody></p:sp></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>';
     }
@@ -492,6 +513,23 @@ final class PdfToolsService
 
     private function themeXml(): string
     {
-        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="PDFForge"><a:themeElements><a:clrScheme name="PDFForge"><a:dk1><a:srgbClr val="000000"/></a:dk1><a:lt1><a:srgbClr val="FFFFFF"/></a:lt1><a:dk2><a:srgbClr val="333333"/></a:dk2><a:lt2><a:srgbClr val="F2F2F2"/></a:lt2><a:accent1><a:srgbClr val="4F46E5"/></a:accent1><a:accent2><a:srgbClr val="7C3AED"/></a:accent2><a:accent3><a:srgbClr val="06B6D4"/></a:accent3><a:accent4><a:srgbClr val="22C55E"/></a:accent4><a:accent5><a:srgbClr val="F59E0B"/></a:accent5><a:accent6><a:srgbClr val="EF4444"/></a:accent6><a:hlink><a:srgbClr val="0000FF"/></a:hlink><a:folHlink><a:srgbClr val="800080"/></a:folHlink></a:clrScheme><a:fontScheme name="PDFForge"><a:majorFont><a:latin typeface="Arial"/></a:majorFont><a:minorFont><a:latin typeface="Arial"/></a:minorFont></a:fontScheme><a:fmtScheme name="PDFForge"><a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:fillStyleLst><a:lnStyleLst/><a:effectStyleLst/><a:bgFillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:bgFillStyleLst></a:fmtScheme></a:themeElements></a:theme>';
+        $fill = '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>';
+        $line = '<a:ln w="6350">' . $fill . '<a:prstDash val="solid"/></a:ln>';
+        $effect = '<a:effectStyle><a:effectLst/></a:effectStyle>';
+        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            . '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="PDFForge"><a:themeElements>'
+            . '<a:clrScheme name="PDFForge"><a:dk1><a:srgbClr val="000000"/></a:dk1><a:lt1><a:srgbClr val="FFFFFF"/></a:lt1>'
+            . '<a:dk2><a:srgbClr val="333333"/></a:dk2><a:lt2><a:srgbClr val="F2F2F2"/></a:lt2>'
+            . '<a:accent1><a:srgbClr val="4F46E5"/></a:accent1><a:accent2><a:srgbClr val="7C3AED"/></a:accent2>'
+            . '<a:accent3><a:srgbClr val="06B6D4"/></a:accent3><a:accent4><a:srgbClr val="22C55E"/></a:accent4>'
+            . '<a:accent5><a:srgbClr val="F59E0B"/></a:accent5><a:accent6><a:srgbClr val="EF4444"/></a:accent6>'
+            . '<a:hlink><a:srgbClr val="0000FF"/></a:hlink><a:folHlink><a:srgbClr val="800080"/></a:folHlink></a:clrScheme>'
+            . '<a:fontScheme name="PDFForge"><a:majorFont><a:latin typeface="Arial"/></a:majorFont>'
+            . '<a:minorFont><a:latin typeface="Arial"/></a:minorFont></a:fontScheme>'
+            . '<a:fmtScheme name="PDFForge"><a:fillStyleLst>' . $fill . $fill . $fill . '</a:fillStyleLst>'
+            . '<a:lnStyleLst>' . $line . $line . $line . '</a:lnStyleLst>'
+            . '<a:effectStyleLst>' . $effect . $effect . $effect . '</a:effectStyleLst>'
+            . '<a:bgFillStyleLst>' . $fill . $fill . $fill . '</a:bgFillStyleLst></a:fmtScheme>'
+            . '</a:themeElements></a:theme>';
     }
 }

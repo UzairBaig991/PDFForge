@@ -167,6 +167,7 @@ try {
             $publicMessage = $error->getMessage() === 'ZIP support is not configured.'
                 ? 'ZIP support is not configured on this PHP installation.'
                 : (($error instanceof \PDFForge\Services\PdfToolException
+                    || $error->getMessage() === 'No selectable text was found. Scanned PDFs require OCR.'
                     || preg_match('/^(?:QPDF|Ghostscript|PDF processing engine) is not configured\.$/', $error->getMessage()))
                     ? $error->getMessage()
                     : 'PDF processing failed. Confirm the file is supported and the required engine is installed.');
@@ -188,6 +189,7 @@ try {
     $publicMessage = $error->getMessage() === 'ZIP support is not configured.'
         ? 'ZIP support is not configured on this PHP installation.'
         : (($error instanceof \PDFForge\Services\PdfToolException
+            || $error->getMessage() === 'No selectable text was found. Scanned PDFs require OCR.'
             || preg_match('/^(?:QPDF|Ghostscript|PDF processing engine) is not configured\.$/', $error->getMessage()))
             ? $error->getMessage()
             : 'PDF processing failed. Confirm the file is supported and the required engine is installed.');
