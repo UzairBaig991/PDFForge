@@ -1,0 +1,15 @@
+.container { width: min(var(--container), calc(100% - 48px)); margin-inline: auto; }
+.section { padding: 100px 0; }
+.section-heading { max-width: 700px; margin: 0 auto 48px; text-align: center; }
+.section-heading h2 { margin: 11px 0 13px; font-size: clamp(2rem, 3.2vw, 2.85rem); }
+.section-heading p { max-width: 620px; margin: 0 auto; color: var(--muted); }
+.eyebrow { display: inline-flex; align-items: center; gap: 9px; color: var(--primary); font-size: .73rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+.center-action { margin-top: 34px; text-align: center; }
+.text-link, .back-link { color: var(--primary); font-weight: 700; }
+.text-link:hover, .back-link:hover { color: var(--primary-dark); }
+.page-main { min-height: 58vh; padding: 64px 0 90px; }
+.narrow-container { max-width: 790px; }
+.left-heading { margin-inline: 0; text-align: left; }
+.left-heading p { margin-inline: 0; }
+.skip-link { position: fixed; z-index: 99; top: 8px; left: 8px; transform: translateY(-160%); padding: 10px 16px; border-radius: 8px; background: var(--surface); color: var(--primary); }
+.skip-link:focus { transform: translateY(0); }

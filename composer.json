@@ -1,0 +1,22 @@
+{
+  "name": "pdfforge/web",
+  "description": "A secure, self-hosted PDF utility platform for XAMPP.",
+  "type": "project",
+  "require": {
+    "php": ">=8.0",
+    "ext-pdo": "*",
+    "ext-fileinfo": "*",
+    "ext-mbstring": "*",
+    "ext-zip": "*",
+    "setasign/fpdf": "^1.8",
+    "setasign/fpdi": "^2.6"
+  },
+  "autoload": {
+    "psr-4": {
+      "PDFForge\\": "app/"
+    }
+  },
+  "config": {
+    "sort-packages": true
+  }
+}

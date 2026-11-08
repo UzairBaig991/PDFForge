@@ -1,0 +1,26 @@
+[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #11121a;
+  --surface: #191b26;
+  --text: #f4f4fa;
+  --muted: #a4a8ba;
+  --border: #303242;
+  --primary: #9a8fff;
+  --primary-dark: #b0a7ff;
+  --secondary: #a69cff;
+  --success: #4ade80;
+  --danger: #f87171;
+  --shadow-sm: 0 8px 24px rgba(0, 0, 0, .2);
+  --shadow-md: 0 22px 65px rgba(0, 0, 0, .3);
+}
+[data-theme="dark"] .hero-section { background: radial-gradient(ellipse at 86% 32%, rgba(124, 111, 255, .12), transparent 34%), var(--background); }
+[data-theme="dark"] .drop-zone { border-color: #514a84; background: #201e30; }
+[data-theme="dark"] .drop-zone:hover, [data-theme="dark"] .drop-zone.is-dragging { background: #292541; }
+[data-theme="dark"] .steps-section, [data-theme="dark"] .coming-panel { background: #202130; }
+[data-theme="dark"] .tool-icon, [data-theme="dark"] .feature-icon, [data-theme="dark"] .upload-symbol { background: #292541; color: var(--primary); }
+[data-theme="dark"] .status-live { background: #173625; color: #80e5a1; }
+[data-theme="dark"] .form-alert { border-color: #6b2b32; background: #351d23; color: #ffb4ba; }
+[data-theme="dark"] .success-alert { border-color: #1d5c36; background: #183123; color: #91e9ad; }
+[data-theme="dark"] .decor { border-color: rgba(154, 143, 255, .16); }
+[data-theme="dark"] .button-light { color: #4234d5; }
+[data-theme="dark"] .floating-note, [data-theme="dark"] .mini-check { background: var(--surface); }

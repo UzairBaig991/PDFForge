@@ -1,0 +1,19 @@
+.auth-main { display: grid; place-items: center; padding-block: 70px; }
+.auth-card { width: min(100% - 36px, 480px); padding: 35px; border: 1px solid var(--border); border-radius: 22px; background: var(--surface); box-shadow: var(--shadow-sm); }
+.auth-card h1 { margin: 10px 0 7px; font-size: 2rem; }
+.auth-card > p { color: var(--muted); font-size: .9rem; }
+.form-stack { display: grid; gap: 16px; margin-top: 22px; }
+.form-stack label { display: grid; gap: 7px; font-size: .83rem; font-weight: 700; }
+.form-stack input { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); }
+.form-stack input:focus { border-color: var(--primary); outline: 3px solid rgba(91, 75, 255, .12); }
+.form-stack small { color: var(--muted); font-weight: 400; }
+.form-footnote { margin: 16px 0 0; color: var(--muted); font-size: .83rem; }
+.form-footnote a { color: var(--primary); font-weight: 700; }
+.profile-card { width: 100%; }
+.profile-card hr { margin: 29px 0; border: 0; border-top: 1px solid var(--border); }
+.profile-card > h2 { font-size: 1.25rem; }
+.delete-account-form { margin-top: 30px; }
+.error-card { margin: 8vh auto; text-align: center; }
+.error-card .button { margin-top: 8px; }
+.prose { color: var(--muted); }
+.prose h2 { margin: 31px 0 9px; color: var(--text); font-size: 1.35rem; }

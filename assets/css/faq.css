@@ -1,0 +1,11 @@
+.faq-section { background: var(--surface); }
+.faq-layout { display: grid; grid-template-columns: .8fr 1.2fr; gap: 78px; align-items: start; }
+.faq-layout .section-heading { margin: 0; text-align: left; }
+.faq-layout .section-heading p { margin: 0 0 19px; }
+.faq-list { border-top: 1px solid var(--border); }
+.faq-list details { border-bottom: 1px solid var(--border); }
+.faq-list summary { display: flex; min-height: 62px; align-items: center; justify-content: space-between; gap: 14px; font-weight: 720; list-style: none; cursor: pointer; }
+.faq-list summary::-webkit-details-marker { display: none; }
+.faq-list summary > span { color: var(--primary); font-size: 1.2rem; transition: transform .2s ease; }
+.faq-list details[open] summary > span { transform: rotate(45deg); }
+.faq-list details p { margin: -2px 22px 20px 0; color: var(--muted); font-size: .9rem; }

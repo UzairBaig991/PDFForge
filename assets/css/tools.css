@@ -1,0 +1,32 @@
+.tools-section { background: var(--surface); }
+.tool-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 17px; }
+.tool-card { position: relative; display: flex; min-height: 250px; flex-direction: column; align-items: flex-start; padding: 22px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); box-shadow: 0 4px 14px rgba(31, 35, 67, .025); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+.tool-card:hover { transform: translateY(-4px); border-color: #d2ccff; box-shadow: var(--shadow-sm); }
+.tool-card .tool-status { position: absolute; top: 25px; right: 17px; max-width: 118px; }
+.tool-card h3 { margin: 17px 0 7px; font-size: 1.06rem; }
+.tool-card p { margin-bottom: 17px; color: var(--muted); font-size: .83rem; line-height: 1.55; }
+.tool-link { margin-top: auto; color: var(--primary); font-size: .83rem; font-weight: 750; }
+.page-hero { padding: 64px 0 55px; background: radial-gradient(ellipse at 90% 15%, rgba(124, 111, 255, .12), transparent 40%); }
+.page-hero h1 { margin: 13px 0; font-size: clamp(2.4rem, 4vw, 3.6rem); letter-spacing: -.055em; }
+.page-hero p { color: var(--muted); }
+.tool-search { display: flex; width: min(100%, 520px); height: 52px; align-items: center; gap: 11px; margin-top: 26px; padding: 0 15px; border: 1px solid var(--border); border-radius: 13px; background: var(--surface); color: var(--muted); box-shadow: var(--shadow-sm); }
+.tool-search > span { font-size: 1.3rem; }
+.tool-search input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--text); }
+.tool-directory { padding-bottom: 80px; }
+.directory-section { margin: 42px 0 53px; }
+.directory-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 17px; }
+.directory-heading h2 { margin: 0; font-size: 1.45rem; }
+.directory-heading > span { color: var(--muted); font-size: .81rem; }
+.search-empty { padding: 35px 0; color: var(--muted); text-align: center; }
+.tool-detail { padding-top: 40px; }
+.back-link { display: inline-block; margin-bottom: 21px; font-size: .87rem; }
+.tool-detail-panel { padding: clamp(25px, 5vw, 55px); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-sm); text-align: center; }
+.tool-detail-panel > .tool-status { display: block; margin: 17px auto 9px; }
+.tool-detail-panel > .tool-icon { margin-inline: auto; }
+.tool-detail-panel h1 { margin: 0 0 10px; font-size: clamp(2.2rem, 4vw, 3.25rem); }
+.tool-detail-panel > p { color: var(--muted); }
+.coming-panel { display: flex; max-width: 600px; align-items: flex-start; gap: 16px; margin: 27px auto; padding: 20px; border: 1px solid var(--border); border-radius: 14px; background: var(--background); text-align: left; }
+.coming-panel > span { display: grid; width: 34px; height: 34px; flex: 0 0 34px; place-items: center; border-radius: 11px; background: #f0edff; color: var(--primary); font-weight: 800; }
+.coming-panel h2 { margin: 2px 0 7px; font-size: 1rem; }
+.coming-panel p { margin: 0; color: var(--muted); font-size: .87rem; }
+.engine-note { max-width: 500px; margin: 15px auto 0; font-size: .78rem; }

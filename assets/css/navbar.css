@@ -1,0 +1,25 @@
+.site-header { position: sticky; z-index: 30; top: 0; border-bottom: 1px solid transparent; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(16px); transition: box-shadow .2s ease, border-color .2s ease; }
+.site-header.is-scrolled { border-color: var(--border); box-shadow: 0 5px 24px rgba(25, 28, 62, .06); }
+.navbar { display: flex; min-height: 78px; align-items: center; justify-content: space-between; gap: 25px; }
+.brand { display: inline-flex; align-items: center; gap: 9px; font-size: 1.28rem; font-weight: 850; letter-spacing: -.055em; white-space: nowrap; }
+.brand-mark { width: 31px; height: 34px; color: var(--primary); }
+.brand-mark svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.2; }
+.brand-accent { color: var(--primary); }
+.nav-menu, .nav-links, .nav-actions { display: flex; align-items: center; }
+.nav-menu { flex: 1; justify-content: space-between; }
+.nav-links { gap: clamp(16px, 2.3vw, 31px); margin-left: 52px; }
+.nav-links a, .nav-login { color: var(--muted); font-size: .91rem; font-weight: 650; transition: color .18s ease; }
+.nav-links a:hover, .nav-login:hover { color: var(--primary); }
+.nav-dropdown { position: relative; }
+.nav-dropdown summary { color: var(--muted); font-size: .91rem; font-weight: 650; list-style: none; cursor: pointer; }
+.nav-dropdown summary::-webkit-details-marker { display: none; }
+.nav-dropdown summary span { color: var(--primary); }
+.nav-popover { position: absolute; top: 34px; left: -18px; display: grid; width: 235px; gap: 5px; padding: 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-md); }
+.nav-popover strong { padding: 5px 8px; font-size: .78rem; }
+.nav-popover a { display: flex; justify-content: space-between; padding: 7px 8px; border-radius: 8px; font-size: .81rem; }
+.nav-popover a:hover { background: var(--background); }
+.nav-popover a span { color: var(--muted); font-size: .67rem; }
+.nav-popover .menu-ready { color: var(--success); }
+.nav-actions { gap: 19px; }
+.theme-toggle, .menu-toggle { display: inline-grid; width: 40px; height: 40px; place-items: center; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--primary); font-size: 1.2rem; cursor: pointer; }
+.menu-toggle { display: none; }

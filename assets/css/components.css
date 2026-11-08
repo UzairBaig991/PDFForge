@@ -1,0 +1,26 @@
+.button { display: inline-flex; min-height: 50px; align-items: center; justify-content: center; gap: 10px; padding: 0 21px; border: 1px solid var(--primary); border-radius: 12px; background: var(--primary); color: #fff; font-weight: 750; cursor: pointer; transition: background .18s ease, transform .18s ease, box-shadow .18s ease; }
+.button:hover { transform: translateY(-2px); background: var(--primary-dark); box-shadow: 0 9px 22px rgba(91, 75, 255, .2); }
+.button:disabled { transform: none; opacity: .65; cursor: wait; }
+.button-small { min-height: 42px; padding-inline: 17px; font-size: .9rem; }
+.button-outline { border-color: var(--border); background: var(--surface); color: var(--text); }
+.button-outline:hover { border-color: var(--primary); background: var(--surface); color: var(--primary); }
+.button-light { border-color: #fff; background: #fff; color: var(--primary); }
+.button-light:hover { background: #f2f0ff; color: var(--primary-dark); }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 4px rgba(22, 163, 74, .11); }
+.tool-icon { display: inline-grid; width: 48px; height: 48px; place-items: center; border-radius: 14px; background: #f0edff; color: var(--primary); font-size: 1.25rem; font-weight: 800; }
+.icon-purple { background: #f0edff; color: var(--primary); }
+.icon-blue { background: #eaf3ff; color: #2878ce; }
+.icon-green { background: #e9f8ef; color: #16834a; }
+.icon-orange { background: #fff3e8; color: #c86a17; }
+.tool-status { display: inline-flex; align-items: center; width: fit-content; padding: 4px 9px; border-radius: 99px; background: #f1f2f5; color: #6b7280; font-size: .69rem; font-weight: 750; }
+.status-live { background: #e9f8ef; color: #16834a; }
+.form-alert, .success-alert { margin: 18px 0; padding: 12px 15px; border: 1px solid #fecaca; border-radius: 10px; background: #fef2f2; color: #991b1b; font-size: .9rem; }
+.success-alert { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+.danger-text { color: var(--danger) !important; }
+.empty-state { padding: 58px 18px; text-align: center; }
+.empty-state > span { display: block; color: var(--secondary); font-size: 2rem; }
+.empty-state h3 { margin: 12px 0 5px; }
+.empty-state p { margin-bottom: 20px; color: var(--muted); }
+.convert-button { margin-top: 9px; }
+.toast-region { position: fixed; z-index: 80; right: 20px; bottom: 20px; display: grid; gap: 9px; width: min(360px, calc(100vw - 40px)); }
+.toast { padding: 13px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-md); font-size: .86rem; }
