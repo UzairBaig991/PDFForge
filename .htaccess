@@ -12,4 +12,6 @@ Options -Indexes
 </FilesMatch>
 
 RewriteEngine On
+RewriteRule ^api/(upload|process|status|download|delete|tools)\.php$ api.php?action=$1 [QSA,L,NC]
+RewriteRule ^tools/(?!tools\.php$|tool-template\.php$)([a-z0-9-]+)\.php$ tools/tool-template.php?tool=$1 [QSA,L,NC]
 RewriteRule ^(app|config|database|includes|storage|vendor)/ - [F,L,NC]

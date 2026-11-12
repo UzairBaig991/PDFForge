@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/app/bootstrap.php';
+$toolSlug = (string) ($_GET['tool'] ?? ($toolSlug ?? ''));
 $tools = [
     'pdf-to-jpg' => ['PDF to JPG', 'Render every page of your PDF as a JPG image.'],
     'jpg-to-pdf' => ['JPG to PDF', 'Arrange JPG or PNG images into a PDF document.'],

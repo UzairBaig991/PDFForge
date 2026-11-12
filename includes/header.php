@@ -22,13 +22,6 @@ $baseUrl = app_config('app_url');
         'maxUploadSize' => app_config('max_upload_size'),
     ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;</script>
     <script defer src="<?= e($baseUrl) ?>/assets/js/app.js"></script>
-    <script defer src="<?= e($baseUrl) ?>/assets/js/theme.js"></script>
-    <script defer src="<?= e($baseUrl) ?>/assets/js/navbar.js"></script>
-    <script defer src="<?= e($baseUrl) ?>/assets/js/notifications.js"></script>
-    <script defer src="<?= e($baseUrl) ?>/assets/js/modal.js"></script>
-    <script defer src="<?= e($baseUrl) ?>/assets/js/faq.js"></script>
-    <script defer src="<?= e($baseUrl) ?>/assets/js/upload.js"></script>
-    <script defer src="<?= e($baseUrl) ?>/assets/js/pdf-tools.js"></script>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>

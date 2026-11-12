@@ -11,6 +11,7 @@ PDFForge is a self-hosted PHP toolkit for Apache, MySQL, and XAMPP. All 13 liste
 - DOCX, XLSX, and PPTX creation from selectable PDF text. These conversions do not OCR scans or preserve the original page layout.
 - PDO/MySQL schema, account registration/login/profile/password change, a basic dashboard, and admin-role-gated overview.
 - Configurable one-hour default retention with a command-line cleanup script.
+- Shared styles and browser interactions are bundled into one CSS and one JavaScript file. PDF tool page URLs and API URLs remain unchanged and route through shared handlers.
 
 ## Requirements
 
