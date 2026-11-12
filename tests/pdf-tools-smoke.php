@@ -6,7 +6,7 @@ if (PHP_SAPI !== 'cli') {
     exit;
 }
 
-require dirname(__DIR__) . '/app/bootstrap.php';
+require dirname(__DIR__) . '/app.php';
 
 $directory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'pdfforge-smoke-' . bin2hex(random_bytes(8));
 if (!mkdir($directory, 0700, true)) {

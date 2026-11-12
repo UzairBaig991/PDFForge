@@ -11,11 +11,6 @@
     "setasign/fpdf": "^1.8",
     "setasign/fpdi": "^2.6"
   },
-  "autoload": {
-    "psr-4": {
-      "PDFForge\\": "app/"
-    }
-  },
   "config": {
     "sort-packages": true
   }

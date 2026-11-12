@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/app/bootstrap.php';
+require_once __DIR__ . '/app.php';
 
 $requestPath = (string) (parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH) ?: '');
 $action = strtolower(pathinfo($requestPath, PATHINFO_FILENAME));

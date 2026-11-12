@@ -1,7 +1,0 @@
-<?php
-declare(strict_types=1);
-require_once __DIR__ . '/app/bootstrap.php';
-render_header('Privacy');
-?>
-<main id="main" class="page-main"><section class="page-hero"><div class="container narrow-container"><span class="eyebrow">PRIVACY</span><h1>File handling, explained.</h1><p>This starter runs on the server where it is installed. The site operator controls the server, database, backups, logs, and configuration.</p></div></section><section class="section"><div class="container narrow-container prose"><h2>Uploaded documents</h2><p>Uploads are checked on the server and stored in protected storage with random internal names. Download requests are checked against the session or signed-in account that created the job. The default expiry is one hour.</p><h2>Automatic deletion</h2><p>Expired records and files are removed by the included cleanup script when it is scheduled. If that script is not run, files may remain on disk longer than their expiry timestamp.</p><h2>Accounts</h2><p>Account credentials are stored as password hashes. This starter does not include email verification, password reset email delivery, analytics, or third-party tracking.</p><h2>Operator responsibilities</h2><p>Before public deployment, configure HTTPS, mail handling if needed, database access controls, secure backups, and your legal notices. This template is not legal advice.</p></div></section></main>
-<?php render_footer(); ?>

@@ -1,11 +1,433 @@
 <?php
 declare(strict_types=1);
 
-namespace PDFForge\Services;
+namespace {
+$config = require __DIR__ . '/config/config.php';
+define('APP_ROOT', $config['root']);
 
+if (is_file(APP_ROOT . '/vendor/autoload.php')) {
+    require APP_ROOT . '/vendor/autoload.php';
+}
+
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    ini_set('session.use_strict_mode', '1');
+    session_name('pdfforge_session');
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    session_start();
+}
+
+
+
+
+
+if (empty($config['debug'])) {
+    ini_set('display_errors', '0');
+    ini_set('display_startup_errors', '0');
+}
+ini_set('log_errors', '1');
+function app_config(?string $key = null): mixed
+{
+    global $config;
+    return $key === null ? $config : ($config[$key] ?? null);
+}
+
+function e(mixed $value): string
+{
+    return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+function db(): PDO
+{
+    static $connection;
+    if ($connection instanceof PDO) {
+        return $connection;
+    }
+
+    $settings = app_config('database');
+    $dsn = sprintf(
+        'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
+        $settings['host'],
+        $settings['port'],
+        $settings['name']
+    );
+    $connection = new PDO($dsn, $settings['user'], $settings['password'], [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ]);
+    return $connection;
+}
+
+function csrf_token(): string
+{
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function verify_csrf(): void
+{
+    $token = (string) ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? '');
+    if ($token === '' || !hash_equals(csrf_token(), $token)) {
+        json_response(['success' => false, 'message' => 'Your session expired. Refresh the page and try again.'], 419);
+    }
+}
+
+function json_response(array $payload, int $status = 200): void
+{
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    echo json_encode($payload, JSON_THROW_ON_ERROR);
+    exit;
+}
+
+function current_user(): ?array
+{
+    return isset($_SESSION['user']) && is_array($_SESSION['user']) ? $_SESSION['user'] : null;
+}
+
+function require_login(): array
+{
+    $user = current_user();
+    if ($user === null) {
+        header('Location: ' . app_config('app_url') . '/login.php');
+        exit;
+    }
+    return $user;
+}
+
+function session_owner_hash(): string
+{
+    return hash('sha256', session_id());
+}
+
+function ensure_storage_directories(): void
+{
+    foreach (['uploads', 'processed', 'temp', 'logs'] as $directory) {
+        $path = APP_ROOT . '/storage/' . $directory;
+        if (!is_dir($path) && !mkdir($path, 0700, true) && !is_dir($path)) {
+            throw new RuntimeException('Secure file storage is unavailable.');
+        }
+    }
+}
+
+function log_app_error(Throwable $error, string $context = 'application'): void
+{
+    ensure_storage_directories();
+    $line = sprintf(
+        "[%s] %s: %s\n",
+        date(DATE_ATOM),
+        preg_replace('/[^a-z0-9_-]/i', '', $context),
+        str_replace(["\r", "\n"], ' ', $error->getMessage())
+    );
+    error_log($line, 3, APP_ROOT . '/storage/logs/application.log');
+}
+
+function render_header(string $title, string $description = ''): void
+{
+    $pageTitle = $title === 'PDFForge' ? $title : $title . ' | PDFForge';
+    render_header_template($pageTitle, $description);
+}
+
+function render_footer(): void
+{
+    render_footer_template();
+}
+
+function human_size(int $bytes): string
+{
+    if ($bytes < 1024) {
+        return $bytes . ' B';
+    }
+    $units = ['KB', 'MB', 'GB'];
+    $value = $bytes / 1024;
+    foreach ($units as $unit) {
+        if ($value < 1024 || $unit === 'GB') {
+            return number_format($value, 1) . ' ' . $unit;
+        }
+        $value /= 1024;
+    }
+    return number_format($value, 1) . ' GB';
+}
+
+
+function render_header_template(string $pageTitle, string $description): void
+{
+$description = $description !== '' ? $description : 'Simple, secure tools to convert and manage your PDF files.';
+$baseUrl = app_config('app_url');
+?>
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><?= e($pageTitle) ?></title>
+    <meta name="description" content="<?= e($description) ?>">
+    <link rel="canonical" href="<?= e($baseUrl . ($_SERVER['REQUEST_URI'] ?? '/')) ?>">
+    <meta property="og:title" content="<?= e($pageTitle) ?>">
+    <meta property="og:description" content="<?= e($description) ?>">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#5b4bff">
+    <link rel="stylesheet" href="<?= e($baseUrl) ?>/assets/css/main.css">
+    <script>window.PDFFORGE = <?= json_encode([
+        'baseUrl' => $baseUrl,
+        'csrfToken' => csrf_token(),
+        'maxUploadSize' => app_config('max_upload_size'),
+    ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;</script>
+    <script defer src="<?= e($baseUrl) ?>/assets/js/app.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header" id="site-header">
+    <nav class="navbar container" aria-label="Main navigation">
+        <a class="brand" href="<?= e($baseUrl) ?>/index.php" aria-label="PDFForge home">
+            <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M7 3h12l7 7v19H7z"/><path d="M19 3v8h7M11 18h11M11 23h8"/></svg></span>
+            <span>PDF<span class="brand-accent">Forge</span></span>
+        </a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-menu" aria-label="Open menu"><span></span><span></span><span></span></button>
+        <div class="nav-menu" id="primary-menu">
+            <div class="nav-links">
+                <details class="nav-dropdown"><summary>Tools <span aria-hidden="true">⌄</span></summary><div class="nav-popover"><strong>Explore PDF tools</strong><a href="<?= e($baseUrl) ?>/tools/tools.php">All tools</a><a href="<?= e($baseUrl) ?>/tools/pdf-to-jpg.php">PDF to JPG <span class="menu-ready">Ready</span></a><a href="<?= e($baseUrl) ?>/tools/merge-pdf.php">Merge PDF <span class="menu-ready">Ready</span></a></div></details>
+                <a href="<?= e($baseUrl) ?>/index.php#features">Features</a>
+                <a href="<?= e($baseUrl) ?>/pricing.php">Pricing</a>
+                <a href="<?= e($baseUrl) ?>/about.php">About</a>
+                <a href="<?= e($baseUrl) ?>/contact.php">Contact</a>
+            </div>
+            <div class="nav-actions">
+                <button class="theme-toggle" type="button" aria-label="Toggle dark mode"><span aria-hidden="true">◐</span></button>
+                <?php if (current_user()): ?>
+                    <a class="nav-login" href="<?= e($baseUrl) ?>/dashboard.php">Dashboard</a>
+                <?php else: ?>
+                    <a class="nav-login" href="<?= e($baseUrl) ?>/login.php">Log in</a>
+                <?php endif; ?>
+                <a class="button button-small" href="<?= e($baseUrl) ?>/register.php">Get started</a>
+            </div>
+        </div>
+    </nav>
+</header>
+<?php }
+
+function render_footer_template(): void
+{
+$baseUrl = app_config('app_url'); ?>
+<footer class="site-footer">
+    <div class="container footer-grid">
+        <div class="footer-brand">
+            <a class="brand" href="<?= e($baseUrl) ?>/index.php"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M7 3h12l7 7v19H7z"/><path d="M19 3v8h7M11 18h11M11 23h8"/></svg></span><span>PDF<span class="brand-accent">Forge</span></span></a>
+            <p>Thoughtful tools for your everyday documents.</p>
+        </div>
+        <div><h2>Tools</h2><a href="<?= e($baseUrl) ?>/tools/tools.php">All PDF tools</a><a href="<?= e($baseUrl) ?>/tools/pdf-to-jpg.php">PDF to JPG</a><a href="<?= e($baseUrl) ?>/tools/merge-pdf.php">Merge PDF</a></div>
+        <div><h2>Company</h2><a href="<?= e($baseUrl) ?>/about.php">About</a><a href="<?= e($baseUrl) ?>/contact.php">Contact</a><a href="<?= e($baseUrl) ?>/pricing.php">Pricing</a></div>
+        <div><h2>Resources</h2><a href="<?= e($baseUrl) ?>/faq.php">FAQ</a><a href="<?= e($baseUrl) ?>/privacy.php">Privacy</a><a href="<?= e($baseUrl) ?>/terms.php">Terms</a></div>
+    </div>
+    <div class="container footer-bottom"><span>© <?= date('Y') ?> PDFForge</span><span>Files expire on schedule and are removed by the cleanup task.</span></div>
+</footer>
+</body>
+</html>
+<?php }
+
+function render_upload_form(?string $uploadTool = null): void
+{
+    $uploadTool = $uploadTool ?? 'pdf-to-jpg';
+$multiUpload = in_array($uploadTool ?? '', ['jpg-to-pdf', 'merge-pdf'], true);
+$imageUpload = ($uploadTool ?? '') === 'jpg-to-pdf';
+$acceptedTypes = $imageUpload ? 'image/jpeg,image/png,.jpg,.jpeg,.png' : 'application/pdf,.pdf';
+$uploadTitleText = $imageUpload ? 'Drag & drop your images here' : 'Drag & drop your PDF here';
+$selectionLabel = $imageUpload ? 'image files' : ($multiUpload ? 'PDF files' : 'a PDF file');
+?>
+<form class="upload-form" data-upload-form data-tool="<?= e($uploadTool ?? 'pdf-to-jpg') ?>" data-image-upload="<?= $imageUpload ? 'true' : 'false' ?>" action="<?= e(app_config('app_url')) ?>/api/upload.php" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+    <input type="hidden" name="tool" value="<?= e($uploadTool ?? 'pdf-to-jpg') ?>">
+    <input class="file-input" type="file" name="files[]" accept="<?= e($acceptedTypes) ?>" <?= $multiUpload ? 'multiple' : '' ?> data-file-input aria-label="Choose <?= e($selectionLabel) ?>">
+    <div class="drop-zone" data-drop-zone tabindex="0" role="button" aria-label="Choose or drop <?= e($selectionLabel) ?>">
+        <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M12 5h16l9 9v29H12z"/><path d="M28 5v10h9M17 25h15M17 31h15M17 37h10"/></svg></span>
+        <strong data-upload-title><?= e($uploadTitleText) ?></strong>
+        <span class="upload-or">or</span>
+        <button class="button button-upload" type="button" data-select-file><?= $imageUpload ? 'Select image files' : ($multiUpload ? 'Select files' : 'Select PDF file') ?></button>
+        <span class="upload-limit"><?= $imageUpload ? 'JPG or PNG' : 'PDF' ?><?= $multiUpload ? ' · up to 20 files' : '' ?> · combined size up to <?= e(human_size((int) app_config('max_upload_size'))) ?></span>
+    </div>
+    <div class="upload-file" data-upload-file hidden><span class="file-badge">PDF</span><span class="file-name" data-file-name></span><button type="button" class="icon-button" data-remove-file aria-label="Remove selected file">×</button></div>
+    <div class="upload-status" data-upload-status role="status" aria-live="polite" hidden>
+        <div class="status-head"><span data-status-text>Uploading…</span><button type="button" class="text-button" data-cancel hidden>Cancel</button></div>
+        <progress class="upload-progress" data-progress max="100" value="0" aria-label="Upload progress"></progress>
+        <div class="result-actions" data-result hidden></div>
+        <button class="button button-small upload-retry" type="button" data-retry hidden>Try again</button>
+    </div>
+    <?php if (($uploadTool ?? '') === 'split-pdf'): ?>
+        <label class="tool-option">Pages to extract <input type="text" name="pages" placeholder="Leave blank to split every page, or enter 1-3,5"></label>
+    <?php elseif (($uploadTool ?? '') === 'rotate-pdf'): ?>
+        <label class="tool-option">Rotation <select name="degrees"><option value="90">90° clockwise</option><option value="180">180°</option><option value="270">270° clockwise</option></select></label>
+        <label class="tool-option">Pages <input type="text" name="pages" placeholder="Leave blank for all, or enter 1-3,5"></label>
+    <?php elseif (($uploadTool ?? '') === 'watermark-pdf'): ?>
+        <label class="tool-option">Watermark text <input type="text" name="text" maxlength="100" value="CONFIDENTIAL" required></label>
+    <?php elseif (($uploadTool ?? '') === 'compress-pdf'): ?>
+        <label class="tool-option">Compression quality <select name="quality"><option value="screen">Smallest file</option><option value="ebook" selected>Balanced</option><option value="printer">Higher quality</option></select></label>
+    <?php elseif (in_array($uploadTool ?? '', ['protect-pdf', 'unlock-pdf'], true)): ?>
+        <label class="tool-option"><?= ($uploadTool ?? '') === 'protect-pdf' ? 'New PDF password' : 'Current PDF password' ?><input type="password" name="password" minlength="<?= ($uploadTool ?? '') === 'protect-pdf' ? '6' : '1' ?>" maxlength="128" autocomplete="new-password" required></label>
+    <?php endif; ?>
+</form>
+<?php }
+
+function render_error_page(int $status): void
+{
+    http_response_code($status);
+    $details = match ($status) {
+        403 => ['Access denied', '403 - ACCESS DENIED', 'You do not have access.', 'This area is restricted to authorized accounts.'],
+        500 => ['Something went wrong', '500 - SERVER ERROR', 'Something went wrong.', 'Please try again. The server has not exposed internal diagnostic details.'],
+        default => ['Page not found', '404 - NOT FOUND', 'This page is not here.', 'The link may be outdated, or the page may have moved.'],
+    };
+    render_header($details[0]);
+    ?>
+    <main id="main" class="page-main"><section class="auth-card error-card"><span class="eyebrow"><?= e($details[1]) ?></span><h1><?= e($details[2]) ?></h1><p><?= e($details[3]) ?></p><a class="button button-outline" href="<?= e(app_config('app_url')) ?><?= $status === 403 ? '/dashboard.php' : '/index.php' ?>"><?= $status === 403 ? 'Return to dashboard' : 'Back to home' ?></a></section></main>
+    <?php
+    render_footer();
+}
+}
+
+namespace PDFForge\Services {
 use RuntimeException;
 use setasign\Fpdi\Fpdi;
 use ZipArchive;
+
+final class PdfEngine
+{
+    public function executable(string $program): string
+    {
+        $engineName = match ($program) {
+            'qpdf' => 'QPDF',
+            'gs' => 'Ghostscript',
+            default => 'PDF processing engine',
+        };
+        $setting = trim((string) app_config(match ($program) {
+            'qpdf' => 'qpdf_path',
+            'gs' => 'ghostscript_path',
+            default => 'pdf_engine_path',
+        }));
+        if ($setting === '') {
+            throw new RuntimeException($engineName . ' is not configured.');
+        }
+
+        $name = match ($program) {
+            'gs' => PHP_OS_FAMILY === 'Windows' ? 'gswin64c.exe' : 'gs',
+            default => $program . (PHP_OS_FAMILY === 'Windows' ? '.exe' : ''),
+        };
+        if (is_file($setting)) {
+            $candidate = strcasecmp(basename($setting), $name) === 0
+                ? $setting
+                : dirname($setting) . DIRECTORY_SEPARATOR . $name;
+        } else {
+            $candidate = rtrim($setting, DIRECTORY_SEPARATOR . '/\\') . DIRECTORY_SEPARATOR . $name;
+        }
+        if (!is_file($candidate) || !is_executable($candidate)) {
+            throw new RuntimeException($engineName . ' is not configured.');
+        }
+        return $candidate;
+    }
+
+    public function run(array $command, string $outputDirectory): int
+    {
+        if (!function_exists('proc_open')) {
+            throw new RuntimeException('The PDF processing engine cannot be started on this server.');
+        }
+
+        $stdout = fopen($outputDirectory . DIRECTORY_SEPARATOR . 'engine.stdout', 'wb');
+        $stderr = fopen($outputDirectory . DIRECTORY_SEPARATOR . 'engine.stderr', 'wb');
+        if ($stdout === false || $stderr === false) {
+            if (is_resource($stdout)) {
+                fclose($stdout);
+            }
+            if (is_resource($stderr)) {
+                fclose($stderr);
+            }
+            throw new RuntimeException('Temporary processing storage is unavailable.');
+        }
+
+        $process = proc_open($command, [
+            0 => ['pipe', 'r'],
+            1 => $stdout,
+            2 => $stderr,
+        ], $pipes, APP_ROOT);
+        fclose($stdout);
+        fclose($stderr);
+        if (!is_resource($process)) {
+            throw new RuntimeException('The PDF processing engine could not be started.');
+        }
+
+        fclose($pipes[0]);
+        return proc_close($process);
+    }
+}
+
+final class PdfToJpgService
+{
+    public function convert(string $inputPath, string $outputDirectory): array
+    {
+        if (!is_file($inputPath) || !is_dir($outputDirectory)) {
+            throw new RuntimeException('The PDF file is no longer available.');
+        }
+
+        $prefix = $outputDirectory . DIRECTORY_SEPARATOR . 'page';
+        $command = [
+            (new PdfEngine())->executable('pdftoppm'),
+            '-jpeg',
+            '-r',
+            (string) app_config('pdf_dpi'),
+            '-progress',
+            $inputPath,
+            $prefix,
+        ];
+        $exitCode = (new PdfEngine())->run($command, $outputDirectory);
+
+        $pages = glob($prefix . '-*.jpg') ?: [];
+        natsort($pages);
+        $pages = array_values($pages);
+        if ($exitCode !== 0 || count($pages) === 0) {
+            throw new RuntimeException('PDF conversion failed. Check that the PDF is valid and Poppler is installed.');
+        }
+
+        return $pages;
+    }
+}
+
+final class PdfTextService
+{
+    public function extract(string $inputPath, string $outputDirectory): string
+    {
+        if (!is_file($inputPath) || !is_dir($outputDirectory)) {
+            throw new RuntimeException('The PDF file is no longer available.');
+        }
+
+        $outputPath = $outputDirectory . DIRECTORY_SEPARATOR . 'document.txt';
+        $command = [
+            (new PdfEngine())->executable('pdftotext'),
+            '-layout',
+            '-enc',
+            'UTF-8',
+            $inputPath,
+            $outputPath,
+        ];
+        $exitCode = (new PdfEngine())->run($command, $outputDirectory);
+        if ($exitCode !== 0 || !is_file($outputPath)) {
+            throw new RuntimeException('PDF text extraction failed. Check that the PDF is valid and Poppler is installed.');
+        }
+        $text = file_get_contents($outputPath);
+        if ($text === false) {
+            throw new RuntimeException('The extracted PDF text could not be read.');
+        }
+        if (trim($text) === '') {
+            throw new RuntimeException('No selectable text was found. Scanned PDFs require OCR.');
+        }
+        return $outputPath;
+    }
+}
 
 final class PdfToolException extends RuntimeException
 {
@@ -532,4 +954,5 @@ final class PdfToolsService
             . '<a:bgFillStyleLst>' . $fill . $fill . $fill . '</a:bgFillStyleLst></a:fmtScheme>'
             . '</a:themeElements></a:theme>';
     }
+}
 }

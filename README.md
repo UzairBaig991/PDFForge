@@ -11,7 +11,8 @@ PDFForge is a self-hosted PHP toolkit for Apache, MySQL, and XAMPP. All 13 liste
 - DOCX, XLSX, and PPTX creation from selectable PDF text. These conversions do not OCR scans or preserve the original page layout.
 - PDO/MySQL schema, account registration/login/profile/password change, a basic dashboard, and admin-role-gated overview.
 - Configurable one-hour default retention with a command-line cleanup script.
-- Shared styles and browser interactions are bundled into one CSS and one JavaScript file. PDF tool page URLs and API URLs remain unchanged and route through shared handlers.
+- The runtime is consolidated into seven PHP/CSS/JavaScript files: one public-page router, one account router, one API router, one shared runtime/PDF service file, the existing configuration file, and one CSS and one JavaScript bundle. Existing page and API URLs continue to work through Apache rewrite rules.
+- The cleanup command and PDF smoke test remain separate operational scripts; documentation, Composer dependencies, database files, and `.env` are not included in the seven-file runtime count.
 
 ## Requirements
 
@@ -80,7 +81,7 @@ Available `.env` settings:
 | `GHOSTSCRIPT_PATH` | Ghostscript executable or its containing folder | Unset |
 | `PDF_DPI` | Render resolution | `150` |
 
-Keep `.env` private. Apache access to `app`, `config`, `database`, `includes`, `storage`, and `vendor` is denied by `.htaccess`; keep Apache `AllowOverride` enabled so these protections take effect.
+Keep `.env` private. Apache access to `app`, `config`, `database`, `includes`, `storage`, and `vendor` is denied by `.htaccess`; keep Apache `AllowOverride` enabled so these protections and the legacy URL rewrites take effect.
 
 ## Accounts and admin access
 

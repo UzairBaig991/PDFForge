@@ -4,7 +4,7 @@ if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
 }
-require_once dirname(__DIR__) . '/app/bootstrap.php';
+require_once dirname(__DIR__) . '/app.php';
 
 try {
     $select = db()->query(

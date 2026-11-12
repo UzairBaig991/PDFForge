@@ -12,6 +12,11 @@ Options -Indexes
 </FilesMatch>
 
 RewriteEngine On
-RewriteRule ^api/(upload|process|status|download|delete|tools)\.php$ api.php?action=$1 [QSA,L,NC]
-RewriteRule ^tools/(?!tools\.php$|tool-template\.php$)([a-z0-9-]+)\.php$ tools/tool-template.php?tool=$1 [QSA,L,NC]
+RewriteRule ^app\.php$ - [F,L,NC]
+RewriteRule ^api/(upload|process|status|download|delete|tools)\.php$ api.php [QSA,END,NC]
+RewriteRule ^tools/tools\.php$ index.php?route=tools [QSA,END,NC]
+RewriteRule ^tools/([a-z0-9-]+)\.php$ index.php?route=tool&tool=$1 [QSA,END,NC]
+RewriteRule ^admin/index\.php$ account.php?route=admin [QSA,END,NC]
+RewriteRule ^(dashboard|login|logout|register|forgot-password|reset-password|profile)\.php$ account.php?route=$1 [QSA,END,NC]
+RewriteRule ^(about|contact|faq|pricing|privacy|terms|403|404|500)\.php$ index.php?route=$1 [QSA,END,NC]
 RewriteRule ^(app|config|database|includes|storage|vendor)/ - [F,L,NC]
