@@ -118,6 +118,13 @@
   document.querySelectorAll("[data-upload-form]").forEach((form) => {
     const picker = form.querySelector("[data-file-input]");
     const homeToolTabs = [...document.querySelectorAll("[data-home-tool]")];
+    const autoUpload = homeToolTabs.length > 0;
+    const convertButton = autoUpload ? null : Object.assign(document.createElement("button"), {
+      type: "button",
+      className: "button button-small convert-button",
+      textContent: "Upload & convert",
+      hidden: true,
+    });
     const homeToolDescription = document.querySelector("[data-home-tool-description]");
     const homeNoteTitle = document.querySelector("[data-home-note-title]");
     const homeNoteDescription = document.querySelector("[data-home-note-description]");
@@ -187,6 +194,7 @@
       progress.value = 0;
       retryButton.hidden = true;
       cancelButton.hidden = true;
+      if (convertButton) convertButton.hidden = true;
       clearResults();
       uploadTitle.textContent = isImageUpload ? "Drag & drop your images here" : "Drag & drop your PDF here";
     };
@@ -199,8 +207,8 @@
     };
 
     const chooseFiles = async (files) => {
-      reset();
       const chosenFiles = [...(files || [])];
+      reset();
       if (!chosenFiles.length) return;
       if ((!multipleAllowed && chosenFiles.length !== 1) || chosenFiles.length > 20) {
         showError(multipleAllowed ? "Choose no more than 20 files." : "Choose one file.", false);
@@ -238,8 +246,13 @@
       uploadTitle.textContent = "Ready to process";
       clearResults();
       retryButton.hidden = true;
-      setStatus("Ready to upload.", false);
-      progress.hidden = true;
+      if (autoUpload) {
+        startUpload();
+      } else {
+        setStatus("File selected. Choose Upload & convert to continue.", false);
+        progress.hidden = true;
+        convertButton.hidden = false;
+      }
     };
 
     const renderResult = (payload, completedJobId) => {
@@ -252,7 +265,7 @@
       const download = document.createElement("a");
       download.className = "button button-small";
       download.href = baseUrl + "/api/download.php?id=" + encodeURIComponent(completedJobId);
-      download.textContent = payload.tool === "pdf-to-word" ? "Download Word document" : "Download JPG";
+      download.textContent = "Download " + (payload.result_name || "file");
       resultBox.append(download);
       const remove = document.createElement("button");
       remove.type = "button";
@@ -395,12 +408,10 @@
       startUpload();
     });
     zone.addEventListener("dblclick", startUpload);
-    selectButton.insertAdjacentElement("afterend", Object.assign(document.createElement("button"), {
-      type: "button",
-      className: "button button-small convert-button",
-      textContent: "Upload & convert",
-    }));
-    form.querySelector(".convert-button").addEventListener("click", startUpload);
+    if (convertButton) {
+      selectButton.insertAdjacentElement("afterend", convertButton);
+      convertButton.addEventListener("click", startUpload);
+    }
     removeButton.addEventListener("click", reset);
     cancelButton.addEventListener("click", () => request?.abort());
     retryButton.addEventListener("click", () => {
