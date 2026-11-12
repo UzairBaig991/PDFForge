@@ -148,7 +148,12 @@ function api_upload(): void
             $mimeType = $file['mime'];
         }
 
-        $expires = date('Y-m-d H:i:s', time() + (int) app_config('retention_seconds'));
+        $expiry = $pdo->prepare('SELECT DATE_ADD(NOW(), INTERVAL :retention_seconds SECOND)');
+        $expiry->execute(['retention_seconds' => (int) app_config('retention_seconds')]);
+        $expires = $expiry->fetchColumn();
+        if (!is_string($expires)) {
+            throw new RuntimeException('File expiration could not be calculated.');
+        }
         $user = current_user();
         $fileId = bin2hex(random_bytes(16));
         $jobId = bin2hex(random_bytes(16));

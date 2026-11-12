@@ -301,7 +301,14 @@
         if (!response.ok || !payload.success) throw new Error(payload.message || "PDF conversion failed.");
         if (jobId === currentJobId) renderResult(payload, currentJobId);
       } catch (error) {
-        if (jobId === currentJobId) showError(error.message || "PDF conversion failed.", true);
+        if (jobId === currentJobId) {
+          if (error.message === "The requested job was not found or has expired.") {
+            jobId = "";
+            showError("This upload expired. Try again to upload the selected file.", true);
+          } else {
+            showError(error.message || "PDF conversion failed.", true);
+          }
+        }
       } finally {
         if (jobId === currentJobId) processing = false;
       }
